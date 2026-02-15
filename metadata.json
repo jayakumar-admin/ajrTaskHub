@@ -1,0 +1,7 @@
+{
+  "name": "AJRTaskHub",
+  "description": "A comprehensive task management application with robust features for task tracking, collaboration, and history, built with Angular and Tailwind CSS.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
