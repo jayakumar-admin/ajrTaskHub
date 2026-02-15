@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
-import { SupabaseService } from '../../services/supabase.service';
+import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { ThemeService, Theme } from '../../services/theme.service';
 import { UserSettings } from '../../shared/interfaces';
@@ -36,7 +36,7 @@ import { UserSettings } from '../../shared/interfaces';
           <div>
             <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
             <input type="text" id="username" name="username" [(ngModel)]="username" required
-                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                   class="form-input">
           </div>
 
           <!-- Section for Notifications & Theme -->
@@ -60,7 +60,7 @@ import { UserSettings } from '../../shared/interfaces';
                 <div>
                   <label for="whatsappNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-300">WhatsApp Number</label>
                   <input type="text" id="whatsappNumber" name="whatsappNumber" [(ngModel)]="whatsappNumber" placeholder="+1234567890"
-                         class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                         class="form-input">
                 </div>
               }
 
@@ -86,7 +86,6 @@ import { UserSettings } from '../../shared/interfaces';
             </div>
           </div>
 
-
           <!-- Action Buttons -->
           <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
              <button type="button" (click)="router.navigateByUrl('/tasks')"
@@ -111,6 +110,7 @@ export class SettingsComponent {
   authService = inject(AuthService);
   notificationService = inject(NotificationService);
   themeService = inject(ThemeService);
+  apiService = inject(ApiService);
   router = inject(Router);
 
   currentUser = this.authService.currentUser;
@@ -132,11 +132,7 @@ export class SettingsComponent {
       const user = this.currentUser()?.profile;
       if (user) {
         this.username.set(user.username);
-        this.avatarUrl.set(
-          user.avatar_base64 
-          ? user.avatar_base64
-          : `https://picsum.photos/seed/${user.id}/200`
-        );
+        this.avatarUrl.set(user.avatar_url || `https://picsum.photos/seed/${user.id}/200`);
       }
     }, { allowSignalWrites: true });
 
@@ -166,21 +162,26 @@ export class SettingsComponent {
   async saveChanges(): Promise<void> {
     const user = this.currentUser()?.profile;
     if (!user) {
-      this.notificationService.showToast('You must be logged in to update your settings.', 'error');
+      this.notificationService.showToast('You must be logged in.', 'error');
       return;
     }
 
     this.isSaving.set(true);
 
-    const profileUpdates: { username?: string; avatar_base64?: string } = {};
-    const settingsUpdates: Partial<UserSettings> = {};
-    let profileChanged = false;
-    let settingsChanged = false;
-
     try {
-      // 1. Prepare profile updates
+      let avatar_url = user.avatar_url;
       if (this.selectedFile) {
-        profileUpdates.avatar_base64 = this.avatarUrl();
+        const { url } = await this.apiService.uploadFile(this.selectedFile);
+        avatar_url = url;
+      }
+
+      const profileUpdates: { username?: string; avatar_url?: string } = {};
+      const settingsUpdates: Partial<UserSettings> = {};
+      let profileChanged = false;
+      let settingsChanged = false;
+
+      if (avatar_url !== user.avatar_url) {
+        profileUpdates.avatar_url = avatar_url;
         profileChanged = true;
       }
       if (this.username().trim() !== user.username) {
@@ -188,7 +189,6 @@ export class SettingsComponent {
         profileChanged = true;
       }
 
-      // 2. Prepare settings updates
       const currentSettings = this.userSettings();
       if ((currentSettings?.whatsapp_notifications_enabled ?? false) !== this.whatsappEnabled()) {
         settingsUpdates.whatsapp_notifications_enabled = this.whatsappEnabled();
@@ -199,8 +199,7 @@ export class SettingsComponent {
         settingsChanged = true;
       }
       
-      // 3. Execute updates if changes were made
-      const promises: Promise<any>[] = [];
+      const promises = [];
       if (profileChanged) {
         promises.push(this.authService.updateUserProfile(profileUpdates));
       }
@@ -218,7 +217,6 @@ export class SettingsComponent {
       this.selectedFile = null;
     } catch (error) {
       console.error('Error saving settings:', error);
-      // AuthService already shows a toast on failure.
     } finally {
       this.isSaving.set(false);
     }

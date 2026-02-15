@@ -1,6 +1,6 @@
 import { Injectable, signal, inject, effect } from '@angular/core';
 import { User } from '../shared/interfaces';
-import { SupabaseService } from './supabase.service';
+import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
 
@@ -8,7 +8,7 @@ import { NotificationService } from './notification.service';
   providedIn: 'root'
 })
 export class UserService {
-  private supabaseService = inject(SupabaseService);
+  private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
 
@@ -30,7 +30,7 @@ export class UserService {
   private async loadUsers(): Promise<void> {
     this.loading.set(true);
     try {
-      const allUsers = await this.supabaseService.fetchUsers();
+      const allUsers = await this.apiService.fetchUsers();
       this.users.set(allUsers);
     } catch (error) {
       console.error('Error fetching users in UserService:', error);

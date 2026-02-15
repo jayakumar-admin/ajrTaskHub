@@ -292,14 +292,12 @@ import { ProjectService } from "../../services/project.service";
         <!-- Tagged Users -->
         <div class="md:col-span-2">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tag Users</label>
-          <div formGroupName="tagged_users" class="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg max-h-48 overflow-y-auto">
-            @for (user of users(); track user.id) {
-              @if(taggedUsersGroup.controls[user.id]) {
+          <div formArrayName="tagged_users" class="mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg max-h-48 overflow-y-auto">
+            @for (user of users(); track user.id; let i = $index) {
                 <div class="flex items-center">
-                  <input [id]="'tag-' + user.id" type="checkbox" [formControlName]="user.id" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 transition-colors">
+                  <input [id]="'tag-' + user.id" type="checkbox" [formControlName]="i" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 transition-colors">
                   <label [for]="'tag-' + user.id" class="ml-2 text-sm text-gray-900 dark:text-gray-300">{{ user.username }}</label>
                 </div>
-              }
             }
           </div>
         </div>
@@ -377,7 +375,7 @@ export class TaskFormComponent {
 
   fb: FormBuilder = inject(FormBuilder);
   taskService: TaskService = inject(TaskService);
-  authService = inject(AuthService);
+  authService: AuthService = inject(AuthService);
   router: Router = inject(Router);
   route: ActivatedRoute = inject(ActivatedRoute);
   notificationService = inject(NotificationService);
@@ -392,13 +390,9 @@ export class TaskFormComponent {
   private taskId = signal<string | null>(null);
   private taskToEdit = computed(() => {
     const fromInput = this.taskToEditInput();
-    if (fromInput) {
-      return fromInput;
-    }
+    if (fromInput) return fromInput;
     const id = this.taskId();
-    if (id) {
-      return this.taskService.getTaskById(id)();
-    }
+    if (id) return this.taskService.getTaskById(id)();
     return undefined;
   });
 
@@ -414,7 +408,7 @@ export class TaskFormComponent {
     due_date: ["", Validators.required],
     subtasks: this.fb.array<FormGroup>([]),
     tags: [""],
-    tagged_users: this.fb.group({}),
+    tagged_users: this.fb.array([]),
     approval_required: [false],
     reminder_option: ["None" as ReminderOption],
     repeat_option: ["None" as RepeatOption],
@@ -422,137 +416,61 @@ export class TaskFormComponent {
 
   taskTypes: TaskType[] = ["Task", "Order", "Bugfix", "Shopping", "Others"];
   priorities: TaskPriority[] = ["Low", "Medium", "High", "Urgent"];
-  reminderOptions: ReminderOption[] = [
-    "None",
-    "1 Day Before",
-    "1 Hour Before",
-    "Custom",
-  ];
+  reminderOptions: ReminderOption[] = ["None", "1 Day Before", "1 Hour Before", "Custom"];
   repeatOptions: RepeatOption[] = ["None", "Daily", "Weekly", "Monthly"];
 
   isEditMode = false;
 
   constructor() {
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get("id");
-      this.taskId.set(id);
-    });
+    this.route.paramMap.subscribe((params) => this.taskId.set(params.get("id")));
 
-    // Effect to manage tagged_users form controls based on available users
     effect(() => {
       const userList = this.users();
-      const taggedUsersGroup = this.taskForm.get('tagged_users') as FormGroup;
+      const taggedUsersArray = this.taskForm.get('tagged_users') as FormArray;
       
-      const existingControlIds = new Set(Object.keys(taggedUsersGroup.controls));
-      const userIds = new Set(userList.map(u => u.id));
-
-      existingControlIds.forEach(id => {
-          if (!userIds.has(id)) {
-              taggedUsersGroup.removeControl(id);
-          }
-      });
-
-      userList.forEach(user => {
-          if (!taggedUsersGroup.contains(user.id)) {
-              taggedUsersGroup.addControl(user.id, this.fb.control(false));
-          }
-      });
+      while(taggedUsersArray.length !== 0) {
+        taggedUsersArray.removeAt(0);
+      }
+      userList.forEach(() => taggedUsersArray.push(this.fb.control(false)));
     });
 
-    // Main effect to populate form based on task
-    effect(
-      () => {
-        const task = this.taskToEdit();
-        if (task) {
-          this.isEditMode = true;
-          this.taskForm.patchValue({
-            title: task.title,
-            description: task.description,
-            type: task.type,
-            assign_to: task.assign_to,
-            project_id: task.project_id,
-            duration: task.duration,
-            priority: task.priority,
-            start_date: task.start_date,
-            due_date: task.due_date,
-            tags: task.tags.join(", "),
-            approval_required: task.approval_required,
-            reminder_option: task.reminder_option,
-            repeat_option: task.repeat_option,
-          });
-          this.subtasks.clear();
-          task.subtasks.forEach((sub) =>
-            this.subtasks.push(
-              this.fb.group({
-                id: [sub.id],
-                title: [sub.title, Validators.required],
-                completed: [sub.completed],
-              })
-            )
-          );
+    effect(() => {
+      const task = this.taskToEdit();
+      if (task) {
+        this.isEditMode = true;
+        this.taskForm.patchValue({
+          ...task,
+          tags: task.tags.join(", "),
+        });
+        
+        this.subtasks.clear();
+        task.subtasks.forEach(sub => this.subtasks.push(this.fb.group({ ...sub })));
 
-          // Patch tagged users
-          const taggedUsersGroup = this.taskForm.get('tagged_users') as FormGroup;
-          if (taggedUsersGroup) {
-              Object.keys(taggedUsersGroup.controls).forEach(userId => {
-                  taggedUsersGroup.get(userId)?.setValue(false, { emitEvent: false });
-              });
-              if (task.tagged_users) {
-                  task.tagged_users.forEach(taggedId => {
-                      if (taggedUsersGroup.get(taggedId)) {
-                          taggedUsersGroup.get(taggedId)?.setValue(true, { emitEvent: false });
-                      }
-                  });
-              }
-          }
+        const userList = this.users();
+        const taggedUsersBools = userList.map(u => task.tagged_users?.includes(u.id) ?? false);
+        this.taskForm.get('tagged_users')?.patchValue(taggedUsersBools, { emitEvent: false });
 
-        } else {
-          this.isEditMode = false;
-          this.taskForm.reset();
-          this.subtasks.clear();
-          this.taskForm.patchValue({
-            type: "Task",
-            priority: "Medium",
-            start_date: new Date().toISOString().substring(0, 10),
-            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-              .toISOString()
-              .substring(0, 10),
-            approval_required: false,
-            reminder_option: "None",
-            repeat_option: "None",
-          });
-          const currentUserId = this.currentUser()?.profile?.id;
-          if (currentUserId) {
-            this.taskForm.patchValue({ assign_to: currentUserId });
-          }
-
-          const taggedUsersGroup = this.taskForm.get('tagged_users') as FormGroup;
-          if (taggedUsersGroup) {
-              Object.keys(taggedUsersGroup.controls).forEach(userId => {
-                  taggedUsersGroup.get(userId)?.setValue(false, { emitEvent: false });
-              });
-          }
-
-          const projectIdFromQuery = this.route.snapshot.queryParamMap.get('projectId');
-          if (projectIdFromQuery) {
-              this.taskForm.patchValue({ project_id: projectIdFromQuery });
-          }
-        }
-      },
-      { allowSignalWrites: true }
-    );
+      } else {
+        this.isEditMode = false;
+        this.taskForm.reset({
+          type: "Task",
+          priority: "Medium",
+          start_date: new Date().toISOString().substring(0, 10),
+          due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10),
+          approval_required: false,
+          reminder_option: "None",
+          repeat_option: "None",
+          assign_to: this.currentUser()?.profile?.id || '',
+          project_id: this.route.snapshot.queryParamMap.get('projectId') || null
+        });
+        this.subtasks.clear();
+      }
+    }, { allowSignalWrites: true });
 
     if (!this.currentUser()) {
-      this.notificationService.showToast(
-        "You must be logged in to create/edit tasks.",
-        "error"
-      );
+      this.notificationService.showToast("You must be logged in.", "error");
       this.router.navigate(["/auth"]);
     }
-  }
-
-  get taggedUsersGroup(): FormGroup {
-    return this.taskForm.get("tagged_users") as FormGroup;
   }
 
   get subtasks() {
@@ -560,13 +478,11 @@ export class TaskFormComponent {
   }
 
   addSubtask(): void {
-    this.subtasks.push(
-      this.fb.group({
-        id: [this.uuidService.generateUuid()],
-        title: ['', Validators.required],
-        completed: [false]
-      })
-    );
+    this.subtasks.push(this.fb.group({
+      id: [this.uuidService.generateUuid()],
+      title: ['', Validators.required],
+      completed: [false]
+    }));
   }
 
   removeSubtask(index: number): void {
@@ -576,80 +492,39 @@ export class TaskFormComponent {
   async onSubmit(): Promise<void> {
     if (this.taskForm.invalid) {
       this.taskForm.markAllAsTouched();
-      this.notificationService.showToast(
-        "Please fill in all required fields correctly.",
-        "error"
-      );
+      this.notificationService.showToast("Please fill in all required fields.", "error");
       return;
     }
 
     const formValue = this.taskForm.value;
-    const currentUserId = this.currentUser()?.profile?.id;
-    if (!currentUserId) {
-      this.notificationService.showToast("User not logged in.", "error");
-      return;
-    }
+    const userList = this.users();
+    const tagged_users = formValue.tagged_users?.map((checked, i) => checked ? userList[i].id : null).filter((id): id is string => id !== null) || [];
 
-    const subtasksArray: Subtask[] = this.subtasks.value.filter((s: any) => s.title);
-
-    const taggedUsersValue = this.taskForm.value.tagged_users || {};
-    const tagged_users = Object.entries(taggedUsersValue)
-      .filter(([, isTagged]) => isTagged)
-      .map(([userId]) => userId);
-
-    const taskData: Omit<
-      Task,
-      "id" | "created_at" | "updated_by" | "updated_by_username" | "like_count" | "liked_by_users"
-    > = {
-      title: formValue.title!,
-      description: formValue.description || "",
-      type: formValue.type!,
-      priority: formValue.priority!,
-      duration: formValue.duration || "",
-      start_date: formValue.start_date!,
-      due_date: formValue.due_date!,
-      status:
-        this.isEditMode && this.taskToEdit()
-          ? this.taskToEdit()!.status
-          : "todo",
-      assign_to: formValue.assign_to!,
-      assigned_by: currentUserId,
-      approval_required: formValue.approval_required!,
-      approval_status: formValue.approval_required ? "Pending" : null,
-      tags: formValue.tags
-        ? formValue.tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter((tag) => tag)
-        : [],
+    const taskData: Omit<Task, "id" | "created_at" | "like_count" | "liked_by_users"> = {
+      ...this.taskToEdit(), // Keep existing fields like status
+      ...formValue,
+      tags: formValue.tags ? formValue.tags.split(",").map(t => t.trim()).filter(t => t) : [],
       tagged_users: tagged_users,
-      subtasks: subtasksArray,
-      reminder_option: formValue.reminder_option!,
-      repeat_option: formValue.repeat_option!,
-      project_id: formValue.project_id || null,
-    };
+      status: this.isEditMode ? this.taskToEdit()!.status : 'todo',
+      approval_status: formValue.approval_required ? (this.taskToEdit()?.approval_status || 'Pending') : null,
+      assigned_by: this.taskToEdit()?.assigned_by || this.currentUser()!.profile.id,
+      updated_by: this.currentUser()!.profile.id
+    } as Omit<Task, "id" | "created_at" | "like_count" | "liked_by_users">;
 
     try {
       let savedTask: Task;
       if (this.isEditMode && this.taskToEdit()) {
-        savedTask = await this.taskService.updateTask({
-          ...this.taskToEdit()!,
-          ...taskData,
-          id: this.taskToEdit()!.id
-        });
-        this.notificationService.showToast("Task updated successfully!", "success");
+        // FIX: The object passed to updateTask needs to be of type Task.
+        // The properties are present at runtime, but TypeScript can't infer it
+        // because of the Omit type on taskData. Casting to Task resolves this.
+        savedTask = await this.taskService.updateTask({ ...taskData, id: this.taskToEdit()!.id } as Task);
       } else {
         savedTask = await this.taskService.addTask(taskData);
-        this.notificationService.showToast("Task created successfully!", "success");
       }
       this.taskSaved.emit(savedTask);
       this.router.navigate(["/tasks", savedTask.id]);
     } catch (error) {
-      console.error("Error saving task:", error);
-      this.notificationService.showToast(
-        "Failed to save task. Please try again.",
-        "error"
-      );
+      // Notification is handled in the service
     }
   }
 }

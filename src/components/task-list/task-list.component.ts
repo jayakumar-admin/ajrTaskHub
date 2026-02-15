@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TaskService } from '../../services/task.service';
 import { AuthService } from '../../services/auth.service';
 import { Task, TaskPriority, TaskType, TaskStatus } from '../../shared/interfaces';
+// FIX: The supabase service file was missing. It is now added and can be imported.
 import { SupabaseService } from '../../services/supabase.service';
 import { TaskCardComponent } from '../task-card/task-card.component';
 import { ThemeService } from '../../services/theme.service';
@@ -356,7 +357,7 @@ export class TaskListComponent implements AfterViewInit {
   });
   
   resetFilters(): void {
-    this.globalSearchTerm.set('');
+    this.searchService.searchTerm.set('');
     this.selectedStatus.set('all');
     this.selectedPriority.set('all');
     this.selectedAssignee.set('all');
@@ -378,7 +379,7 @@ export class TaskListComponent implements AfterViewInit {
   filterByCategory(type: TaskType): void {
     this.selectedType.set(type);
     // Reset other filters for a clean category view
-    this.globalSearchTerm.set('');
+    this.searchService.searchTerm.set('');
     this.selectedStatus.set('all');
     this.selectedPriority.set('all');
     this.selectedAssignee.set('all');

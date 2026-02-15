@@ -1,9 +1,8 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { RolePermissions } from '../shared/interfaces';
-import { SupabaseService } from './supabase.service';
+import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { NotificationService } from './notification.service';
-import { RealtimeChannel } from '@supabase/supabase-js';
 
 const DEFAULT_PERMISSIONS: Omit<RolePermissions, 'role'> = {
   can_create_tasks: false,
@@ -21,20 +20,17 @@ const DEFAULT_PERMISSIONS: Omit<RolePermissions, 'role'> = {
   providedIn: 'root'
 })
 export class PermissionService {
-  private supabase = inject(SupabaseService);
+  private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
 
   private allPermissions = signal<RolePermissions[]>([]);
   private currentUserPermissions = signal<Omit<RolePermissions, 'role'>>(DEFAULT_PERMISSIONS);
-  private permissionChannel: RealtimeChannel | null = null;
   
   loading = signal(true);
 
-  // Expose all permissions for the admin panel
   public allRolePermissions = computed(() => this.allPermissions());
 
-  // Expose individual permissions as computed signals for easy use in components
   canCreateTasks = computed(() => this.currentUserPermissions().can_create_tasks);
   canCreateProjects = computed(() => this.currentUserPermissions().can_create_projects);
   canUseChat = computed(() => this.currentUserPermissions().can_use_chat);
@@ -46,11 +42,16 @@ export class PermissionService {
   canAddCommentAttachment = computed(() => this.currentUserPermissions().can_add_comment_attachment);
 
   constructor() {
-    this.initializePermissions();
-    this.subscribeToPermissionChanges();
-  }
-
-  private initializePermissions() {
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (user) {
+        this.loadAllPermissions();
+      } else {
+        this.allPermissions.set([]);
+        this.currentUserPermissions.set(DEFAULT_PERMISSIONS);
+      }
+    }, { allowSignalWrites: true });
+    
     effect(() => {
       const user = this.authService.currentUser();
       const allPerms = this.allPermissions();
@@ -58,16 +59,16 @@ export class PermissionService {
       if (user?.profile?.role && allPerms.length > 0) {
         const userPerms = allPerms.find(p => p.role === user.profile.role);
         this.currentUserPermissions.set(userPerms || DEFAULT_PERMISSIONS);
-      } else if (!user) {
+      } else {
         this.currentUserPermissions.set(DEFAULT_PERMISSIONS);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   async loadAllPermissions() {
     this.loading.set(true);
     try {
-      const perms = await this.supabase.fetchRolePermissions();
+      const perms = await this.apiService.fetchRolePermissions();
       this.allPermissions.set(perms);
     } catch (error) {
       console.error("Failed to load role permissions", error);
@@ -79,39 +80,15 @@ export class PermissionService {
 
   async updatePermissions(role: string, permissions: Partial<RolePermissions>) {
     try {
-      await this.supabase.updateRolePermissions(role, permissions);
+      await this.apiService.updateRolePermissions(role, permissions);
+      // Manually update local state after successful API call
+      this.allPermissions.update(perms => 
+        perms.map(p => p.role === role ? { ...p, ...permissions } : p)
+      );
       this.notificationService.showToast(`Permissions for ${role} updated.`, 'success');
-      // The real-time subscription will handle updating the local state.
     } catch (error) {
        console.error(`Failed to update permissions for ${role}`, error);
       this.notificationService.showToast(`Failed to update permissions for ${role}.`, 'error');
     }
-  }
-
-  private subscribeToPermissionChanges() {
-    // Unsubscribe from any existing channel first
-    if (this.permissionChannel) {
-      this.supabase.supabase.removeChannel(this.permissionChannel);
-    }
-    
-    this.permissionChannel = this.supabase.supabase
-      .channel('public:role_permissions')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'role_permissions' },
-        (payload) => {
-          console.log('Permission change detected, reloading permissions.', payload);
-          this.loadAllPermissions();
-        }
-      )
-      .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          // Once subscribed, do an initial fetch
-          this.loadAllPermissions();
-        }
-        if (err) {
-            console.error('Real-time permission subscription error:', err);
-        }
-      });
   }
 }

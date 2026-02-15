@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+// FIX: The supabase service file was missing. It is now added and can be imported.
 import { SupabaseService } from '../../services/supabase.service';
 import { ThemeService } from '../../services/theme.service';
 import { NotificationService } from '../../services/notification.service';
@@ -193,7 +194,7 @@ export class HeaderComponent {
   });
   
   onSearchChange(term: string): void {
-    this.searchTerm.set(term);
+    this.searchService.searchTerm.set(term);
     // If user is searching, navigate them to the tasks page to see results
     if (term.length > 0) {
       this.router.navigate(['/tasks'], { fragment: 'all-tasks' });

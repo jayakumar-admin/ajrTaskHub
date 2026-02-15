@@ -1,0 +1,36 @@
+const axios = require('axios');
+const adminQueries = require('../queries/admin.queries');
+
+const sendMessage = async (phoneNumber, message) => {
+    const config = await adminQueries.getWhatsAppConfig();
+
+    if (!config || !config.whatsapp_integration_enabled) {
+        throw new Error('WhatsApp integration is not enabled or configured.');
+    }
+
+    const { whatsapp_graph_url, whatsapp_phone_number_id, whatsapp_access_token } = config;
+    
+    const payload = {
+        messaging_product: "whatsapp",
+        to: phoneNumber,
+        type: "text",
+        text: { "body": message }
+    };
+
+    try {
+        const response = await axios.post(`${whatsapp_graph_url}/${whatsapp_phone_number_id}/messages`, payload, {
+            headers: {
+                'Authorization': `Bearer ${whatsapp_access_token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Meta API Error:', error.response ? error.response.data : error.message);
+        throw new Error(`Failed to send WhatsApp message: ${error.response?.data?.error?.message || error.message}`);
+    }
+};
+
+module.exports = {
+    sendMessage,
+};

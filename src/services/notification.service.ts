@@ -1,50 +1,38 @@
-
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { ChatToast, Notification } from '../shared/interfaces';
 import { UuidService } from './uuid.service';
-import { SupabaseService } from './supabase.service';
+import { ApiService } from './api.service';
 
-interface Toast extends Omit<Notification, 'read' | 'user_id' | 'task_id' | 'created_at'> {
-  timestamp: string; // Toasts use a simple timestamp
+interface Toast {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  timestamp: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  // Signal for transient toast messages
   toasts = signal<Toast[]>([]);
   private timeoutIds: Map<string, any> = new Map();
   
-  // New signal for transient chat notifications
   chatToasts = signal<ChatToast[]>([]);
   private chatTimeoutIds: Map<string, any> = new Map();
 
-  // Signal for persistent notifications from the database
   notifications = signal<Notification[]>([]);
 
   private uuidService = inject(UuidService);
-  private supabaseService = inject(SupabaseService);
+  private apiService = inject(ApiService);
 
   unreadCount = computed(() => this.notifications().filter(n => !n.read).length);
 
-  /**
-   * Shows a temporary toast message that disappears automatically.
-   */
   showToast(message: string, type: 'success' | 'error' | 'info' | 'warning', duration: number = 3000): void {
     const id = this.uuidService.generateUuid();
-    const toast: Toast = {
-      id,
-      message,
-      type,
-      timestamp: new Date().toISOString()
-    };
-    // Add to the beginning of the array so it appears on top
+    const toast: Toast = { id, message, type, timestamp: new Date().toISOString() };
     this.toasts.update(t => [toast, ...t]);
 
-    const timeoutId = setTimeout(() => {
-      this.removeToast(id);
-    }, duration);
+    const timeoutId = setTimeout(() => this.removeToast(id), duration);
     this.timeoutIds.set(id, timeoutId);
   }
   
@@ -54,32 +42,12 @@ export class NotificationService {
     this.timeoutIds.delete(id);
   }
 
-  /**
-   * Shows a temporary WhatsApp-style toast for new chat messages.
-   */
-  showChatToast(
-    senderUsername: string,
-    senderAvatar: string,
-    message: string,
-    conversationUserId: string,
-    duration: number = 5000
-  ): void {
+  showChatToast(senderUsername: string, senderAvatar: string, message: string, conversationUserId: string, duration: number = 5000): void {
     const id = this.uuidService.generateUuid();
-    const chatToast: ChatToast = {
-      id,
-      senderUsername,
-      senderAvatar,
-      message,
-      conversationUserId,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Add to the beginning of the array so it appears on top
+    const chatToast: ChatToast = { id, senderUsername, senderAvatar, message, conversationUserId, timestamp: new Date().toISOString() };
     this.chatToasts.update(t => [chatToast, ...t]);
 
-    const timeoutId = setTimeout(() => {
-      this.removeChatToast(id);
-    }, duration);
+    const timeoutId = setTimeout(() => this.removeChatToast(id), duration);
     this.chatTimeoutIds.set(id, timeoutId);
   }
 
@@ -89,11 +57,9 @@ export class NotificationService {
     this.chatTimeoutIds.delete(id);
   }
 
-  // --- Persistent Notifications ---
-
   async loadNotifications(): Promise<void> {
     try {
-      const dbNotifications = await this.supabaseService.fetchNotifications();
+      const dbNotifications = await this.apiService.fetchNotifications();
       this.notifications.set(dbNotifications);
     } catch(e) {
       console.error("Failed to load notifications", e);
@@ -108,7 +74,7 @@ export class NotificationService {
   async addNotification(userId: string, message: string, type: 'info' | 'warning', taskId?: string): Promise<void> {
     try {
       const newNotificationData = { user_id: userId, message, type, task_id: taskId };
-      const createdNotification = await this.supabaseService.addNotification(newNotificationData);
+      const createdNotification = await this.apiService.addNotification(newNotificationData);
       this.notifications.update(n => [createdNotification, ...n]);
     } catch(e) {
       console.error("Failed to add notification", e);
@@ -118,7 +84,7 @@ export class NotificationService {
 
   async markAsRead(id: string): Promise<void> {
     try {
-      await this.supabaseService.markNotificationAsRead(id);
+      await this.apiService.markNotificationAsRead(id);
       this.notifications.update(notifications => 
         notifications.map(n => n.id === id ? { ...n, read: true } : n)
       );
@@ -130,7 +96,7 @@ export class NotificationService {
 
   async markAllAsRead(): Promise<void> {
     try {
-      await this.supabaseService.markAllNotificationsAsRead();
+      await this.apiService.markAllNotificationsAsRead();
       this.notifications.update(notifications => 
         notifications.map(n => ({ ...n, read: true }))
       );

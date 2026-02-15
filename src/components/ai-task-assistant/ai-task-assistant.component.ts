@@ -580,7 +580,7 @@ export class AiTaskAssistantComponent {
       dateStr !== "null" &&
       /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 
-    // FIX: Add 'liked_by_users' to the Omit type to match what `addTask` expects.
+    // FIX: Add missing properties to match the Omit type expected by taskService.addTask
     const finalTaskData: Omit<
       Task,
       | "id"
@@ -616,6 +616,7 @@ export class AiTaskAssistantComponent {
       subtasks: [],
       reminder_option: "None",
       repeat_option: "None",
+      project_id: null,
     };
 
     try {

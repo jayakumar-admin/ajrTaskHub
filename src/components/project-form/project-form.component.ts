@@ -57,7 +57,8 @@ import { Project } from '../../shared/interfaces';
   `]
 })
 export class ProjectFormComponent {
-  fb = inject(FormBuilder);
+  // FIX: Added explicit type for FormBuilder
+  fb: FormBuilder = inject(FormBuilder);
   router = inject(Router);
   route = inject(ActivatedRoute);
   projectService = inject(ProjectService);
