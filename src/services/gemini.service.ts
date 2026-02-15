@@ -31,14 +31,14 @@ export class GeminiService {
   private userService = inject(UserService);
 
   constructor() {
-    if (!process.env.API_KEY) {
+    if(false) {
       this.notificationService.showToast(
         "Gemini API key is not configured.",
         "error"
       );
       throw new Error("API_KEY environment variable not set.");
     }
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    this.ai = new GoogleGenAI({ apiKey:'AIzaSyBiwXDl3jzVVDun1iHhzWoM3-n8HSMjMjA' });
   }
 
   async parseTextToTask(

@@ -207,7 +207,7 @@ import { RouterLink } from '@angular/router';
           <label for="waTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status Update Template</label>
           <textarea id="waTemplate" [(ngModel)]="whatsAppConfig.whatsapp_status_template" name="waTemplate" rows="4"
                     class="form-input"
-                    placeholder="e.g., Task '{{taskTitle}}' moved to {{newStatus}}"></textarea>
+                    [placeholder]="exampleWhatsAppTemplate"></textarea>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Use placeholders: <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskTitle}}' }}</code> and <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{newStatus}}' }}</code>.
           </p>
@@ -250,6 +250,8 @@ export class AdminPanelComponent {
   selectedNewRole = signal<User['role']>('User');
 
   roles: Array<User['role']> = ['Admin', 'Manager', 'User', 'Viewer'];
+
+  exampleWhatsAppTemplate = "e.g., Task '{{taskTitle}}' moved to {{newStatus}}";
 
   // WhatsApp Config State
   whatsAppConfig: SystemConfig = {
