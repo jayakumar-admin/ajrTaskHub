@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProjectService } from '../../services/project.service';
 import { TaskService } from '../../services/task.service';
@@ -12,7 +12,7 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, SkeletonLoaderComponent, TaskCardComponent],
+  imports: [CommonModule, RouterLink, SkeletonLoaderComponent, TaskCardComponent],
   template: `
     <div class="container mx-auto p-4">
       @if (loading()) {

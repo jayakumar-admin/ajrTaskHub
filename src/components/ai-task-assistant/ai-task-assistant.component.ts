@@ -7,7 +7,7 @@ import {
   ElementRef,
   effect,
 } from "@angular/core";
-import { CommonModule, JsonPipe } from "@angular/common";
+import { CommonModule} from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { GeminiService } from "../../services/gemini.service";
 import { TaskService } from "../../services/task.service";
@@ -30,7 +30,7 @@ declare var webkitSpeechRecognition: any;
 @Component({
   selector: "app-ai-task-assistant",
   standalone: true,
-  imports: [CommonModule, FormsModule, JsonPipe],
+  imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
