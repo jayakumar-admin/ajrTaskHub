@@ -1,3 +1,4 @@
+
 import { Injectable, computed, signal, effect, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { Task, Comment, Attachment, HistoryEntry, Subtask, TaskStatus } from '../shared/interfaces';
@@ -72,12 +73,12 @@ export class TaskService {
     this.loading.set(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
-      const [tasks] = await Promise.all([
+      const [tasks, comments] = await Promise.all([
         this.apiService.fetchTasks(),
-        // this.apiService.fetchAllComments()
+        this.apiService.fetchAllComments()
       ]);
       this._allTasks.set(this.hydrateTasksWithUsernames(tasks));
-      // this._allComments.set(comments);
+      this._allComments.set(comments);
     } catch (error) {
       this.handleError(error, 'Failed to load initial data.');
     } finally {
@@ -146,7 +147,7 @@ export class TaskService {
     } catch (error) { this.handleError(error, 'Failed to load history.'); }
   }
 
-  public async addTask(task: Omit<Task, 'id' | 'created_at' | 'updated_by' | 'updated_by_username' | 'assigned_by_username' | 'assigned_to_username' | 'like_count' | 'liked_by_users'>): Promise<Task> {
+  public async addTask(task: Omit<Task, 'id' | 'ticket_id' | 'created_at' | 'updated_by' | 'updated_by_username' | 'assigned_by_username' | 'assigned_to_username' | 'like_count' | 'liked_by_users'>): Promise<Task> {
     try {
       const addedTask = await this.apiService.addTask(task);
       const hydratedTask = this.hydrateTaskWithUsernames(addedTask);

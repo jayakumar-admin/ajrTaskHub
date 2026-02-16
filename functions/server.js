@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -21,6 +22,7 @@ const uploadRoutes = require('./routes/upload');
 const notificationRoutes = require('./routes/notifications');
 const chatRoutes = require('./routes/chat');
 const whatsappRoutes = require('./routes/whatsapp');
+const commentRoutes = require('./routes/comments');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -30,8 +32,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/comments/all', chatRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/comments', commentRoutes);
 
 // Serve static files from the Angular build
 const angularAppPath = path.join(__dirname, '..', 'dist');
@@ -44,9 +46,7 @@ app.use(express.static(angularAppPath));
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error(err);
-
-    
+    console.error(err.stack);
     res.status(500).send({ error: 'Something went wrong!' });
 });
 

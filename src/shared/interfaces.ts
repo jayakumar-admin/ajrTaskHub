@@ -1,3 +1,4 @@
+
 export interface User {
   id: string; 
   auth_id?: string; // This might not be exposed from the new backend
@@ -60,6 +61,7 @@ export interface HistoryEntry {
 
 export interface Task {
   id: string;
+  ticket_id: number;
   title: string;
   description: string;
   type: TaskType;

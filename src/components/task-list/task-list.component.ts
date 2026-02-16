@@ -1,3 +1,4 @@
+
 import { Component, inject, computed, signal, effect, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -162,9 +163,11 @@ import { SearchService } from '../../services/search.service';
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                     </div>
                   </div>
-                  <div class="flex-grow">
-                    <p class="font-semibold text-gray-900 dark:text-white">{{ task.title }}</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ task.assigned_to_username }}</p>
+                  <div class="flex-grow min-w-0">
+                    <p class="font-semibold text-gray-900 dark:text-white truncate">{{ task.title }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      <span class="font-mono text-xs">#AJR-{{ formatTicketId(task.ticket_id) }}</span> &bull; {{ task.assigned_to_username }}
+                    </p>
                   </div>
                   <div class="w-24 text-center flex-shrink-0">
                     <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ getCompletedSubtasks(task) }}/{{ task.subtasks.length }}</p>
@@ -193,9 +196,11 @@ import { SearchService } from '../../services/search.service';
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
                   </div>
-                  <div class="flex-grow">
-                    <p class="font-semibold text-gray-900 dark:text-white">{{ task.title }}</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ task.due_date | date }}</p>
+                  <div class="flex-grow min-w-0">
+                    <p class="font-semibold text-gray-900 dark:text-white truncate">{{ task.title }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      <span class="font-mono text-xs">#AJR-{{ formatTicketId(task.ticket_id) }}</span> &bull; Due: {{ task.due_date | date }}
+                    </p>
                   </div>
                   <div class="text-right flex-shrink-0">
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ task.assigned_to_username }}</p>
@@ -463,6 +468,11 @@ export class TaskListComponent implements AfterViewInit {
         task.due_date <= nextWeekStr
     ).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
   });
+
+  formatTicketId(id: number): string {
+    if (id === null || id === undefined) return '----';
+    return id.toString().padStart(4, '0');
+  }
 
   getCompletedSubtasks(task: Task): number {
     if (!task.subtasks) return 0;

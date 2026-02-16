@@ -1,3 +1,4 @@
+
 import { Component, input, inject, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -15,6 +16,10 @@ import { AuthService } from '../../services/auth.service';
          class="relative group bg-white dark:bg-gray-700 rounded-lg shadow-md p-5 border-l-4 hover:shadow-xl transition-all duration-200 ease-in-out hover:scale-[1.03] cursor-pointer flex flex-col justify-between"
          [class]="getPriorityBorderClass(task().priority)">
       
+      <span class="absolute top-3 right-3 text-xs font-mono text-gray-400 dark:text-gray-500 group-hover:text-primary-500 transition-colors">
+        #AJR-{{ formatTicketId(task().ticket_id) }}
+      </span>
+
       <!-- Tooltip -->
       <div class="absolute bottom-full left-0 mb-2 w-full max-w-sm p-3 bg-gray-900 dark:bg-black text-white text-sm rounded-lg shadow-lg z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <h4 class="font-bold text-base mb-1 border-b border-gray-700 pb-1">Full Details</h4>
@@ -27,7 +32,7 @@ import { AuthService } from '../../services/auth.service';
 
       <div>
         <div class="flex justify-between items-start mb-2">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white pr-2">{{ task().title }}</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white pr-20">{{ task().title }}</h3>
           <span class="flex-shrink-0 px-2 py-1 rounded-full text-xs font-medium" [class]="getStatusClasses(task().status)">{{ task().status | uppercase }}</span>
         </div>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 h-10">{{ task().description }}</p>
@@ -103,6 +108,11 @@ export class TaskCardComponent {
     if (!userId) return false;
     return this.task().liked_by_users.includes(userId);
   });
+
+  formatTicketId(id: number): string {
+    if (id === null || id === undefined) return '----';
+    return id.toString().padStart(4, '0');
+  }
 
   getPriorityBorderClass(priority: TaskPriority): string {
     switch (priority) {

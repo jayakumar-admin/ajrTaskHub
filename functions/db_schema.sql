@@ -1,3 +1,4 @@
+
 -- Users Table
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -28,6 +29,7 @@ CREATE TABLE project_users (
 -- Tasks Table
 CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ticket_id SERIAL NOT NULL UNIQUE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     type VARCHAR(50) NOT NULL DEFAULT 'Task',

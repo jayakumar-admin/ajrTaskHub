@@ -14,7 +14,6 @@ const login = async (req, res) => {
         const { token, user } = await authService.login(req.body);
         res.json({ token, user });
     } catch (error) {
-        console.error('Login error:', error);
         res.status(401).json({ error: error.message });
     }
 };

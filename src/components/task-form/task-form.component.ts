@@ -1,3 +1,4 @@
+
 import {
   Component,
   inject,
@@ -500,7 +501,7 @@ export class TaskFormComponent {
     const userList = this.users();
     const tagged_users = formValue.tagged_users?.map((checked, i) => checked ? userList[i].id : null).filter((id): id is string => id !== null) || [];
 
-    const taskData: Omit<Task, "id" | "created_at" | "like_count" | "liked_by_users"> = {
+    const taskData: Omit<Task, "id" | "ticket_id" | "created_at" | "like_count" | "liked_by_users"> = {
       ...this.taskToEdit(), // Keep existing fields like status
       ...formValue,
       tags: formValue.tags ? formValue.tags.split(",").map(t => t.trim()).filter(t => t) : [],
@@ -509,15 +510,12 @@ export class TaskFormComponent {
       approval_status: formValue.approval_required ? (this.taskToEdit()?.approval_status || 'Pending') : null,
       assigned_by: this.taskToEdit()?.assigned_by || this.currentUser()!.profile.id,
       updated_by: this.currentUser()!.profile.id
-    } as Omit<Task, "id" | "created_at" | "like_count" | "liked_by_users">;
+    } as Omit<Task, "id" | "ticket_id" | "created_at" | "like_count" | "liked_by_users">;
 
     try {
       let savedTask: Task;
       if (this.isEditMode && this.taskToEdit()) {
-        // FIX: The object passed to updateTask needs to be of type Task.
-        // The properties are present at runtime, but TypeScript can't infer it
-        // because of the Omit type on taskData. Casting to Task resolves this.
-        savedTask = await this.taskService.updateTask({ ...taskData, id: this.taskToEdit()!.id } as Task);
+        savedTask = await this.taskService.updateTask({ ...taskData, id: this.taskToEdit()!.id, ticket_id: this.taskToEdit()!.ticket_id } as Task);
       } else {
         savedTask = await this.taskService.addTask(taskData);
       }

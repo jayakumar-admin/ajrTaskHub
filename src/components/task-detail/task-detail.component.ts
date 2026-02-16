@@ -1,3 +1,4 @@
+
 import { Component, inject, computed, signal, effect } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -37,9 +38,14 @@ import { ProjectService } from '../../services/project.service';
     </div>
   } @else if (task()) {
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6">
-      <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">{{ task()!.title }}</h2>
-        <div class="flex flex-wrap gap-3">
+      <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
+        <div class="flex items-baseline gap-3 flex-wrap">
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">{{ task()!.title }}</h2>
+            @if(task()!.ticket_id) {
+              <span class="text-xl sm:text-2xl font-mono text-gray-400 dark:text-gray-500">#AJR-{{ formatTicketId(task()!.ticket_id) }}</span>
+            }
+        </div>
+        <div class="flex flex-wrap gap-3 self-start sm:self-center">
           @if (canEditContent()) {
             <a [routerLink]="['/tasks', task()!.id, 'edit']"
                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
@@ -407,6 +413,11 @@ export class TaskDetailComponent {
     const completed = t.subtasks.filter(st => st.completed).length;
     return (completed / t.subtasks.length) * 100;
   });
+
+  formatTicketId(id: number): string {
+    if (id === null || id === undefined) return '----';
+    return id.toString().padStart(4, '0');
+  }
 
   async addComment(): Promise<void> {
     const taskId = this.taskId();
