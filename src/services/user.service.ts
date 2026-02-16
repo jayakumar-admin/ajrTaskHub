@@ -1,3 +1,4 @@
+
 import { Injectable, signal, inject, effect } from '@angular/core';
 import { User } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -24,7 +25,7 @@ export class UserService {
         this.users.set([]);
         this.loading.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   private async loadUsers(): Promise<void> {

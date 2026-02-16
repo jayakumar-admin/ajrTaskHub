@@ -1,3 +1,4 @@
+
 const adminService = require('../services/admin.service');
 
 const updateUserRole = async (req, res) => {
@@ -56,6 +57,24 @@ const saveWhatsAppConfig = async (req, res) => {
     }
 };
 
+const getCronJobs = async (req, res) => {
+    try {
+        const jobs = await adminService.getCronJobs();
+        res.json(jobs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const updateCronJob = async (req, res) => {
+    try {
+        const updatedJob = await adminService.updateCronJob(req.params.jobId, req.body);
+        res.json(updatedJob);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     updateUserRole,
     deleteUser,
@@ -63,4 +82,6 @@ module.exports = {
     updateRolePermissions,
     getWhatsAppConfig,
     saveWhatsAppConfig,
+    getCronJobs,
+    updateCronJob,
 };

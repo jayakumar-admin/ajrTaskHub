@@ -1,3 +1,4 @@
+
 import {
   Component,
   inject,
@@ -420,8 +421,7 @@ export class AiTaskAssistantComponent {
           this.userInput.set("");
           this.stopSpeechRecognition();
         }
-      },
-      { allowSignalWrites: true }
+      }
     );
 
     effect(() => {

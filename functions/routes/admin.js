@@ -20,9 +20,9 @@ router.put('/permissions/:role', adminController.updateRolePermissions);
 router.get('/whatsapp-config', adminController.getWhatsAppConfig);
 router.post('/whatsapp-config', adminController.saveWhatsAppConfig);
 
-// Cron Job Management (Example endpoint)
-router.get('/cron-jobs', (req, res) => res.status(501).json({ message: 'Not implemented' }));
-router.put('/cron-jobs/:jobId', (req, res) => res.status(501).json({ message: 'Not implemented' }));
+// Cron Job Management
+router.get('/cron-jobs', adminController.getCronJobs);
+router.put('/cron-jobs/:jobId', adminController.updateCronJob);
 
 
 module.exports = router;

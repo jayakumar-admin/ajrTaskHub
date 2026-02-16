@@ -466,7 +466,7 @@ export class TaskFormComponent {
         });
         this.subtasks.clear();
       }
-    }, { allowSignalWrites: true });
+    });
 
     if (!this.currentUser()) {
       this.notificationService.showToast("You must be logged in.", "error");

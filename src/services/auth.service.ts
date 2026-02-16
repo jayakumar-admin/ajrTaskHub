@@ -1,3 +1,4 @@
+
 import { Injectable, signal, inject, effect, NgZone } from '@angular/core';
 import { User, AuthenticatedUser, UserSettings } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -30,7 +31,7 @@ export class AuthService {
       } else {
         this.userSettings.set(null);
       }
-    }, { allowSignalWrites: true });
+    });
   }
   
   private async loadUserFromToken(): Promise<void> {

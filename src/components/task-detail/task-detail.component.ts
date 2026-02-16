@@ -42,7 +42,7 @@ import { ProjectService } from '../../services/project.service';
         <div class="flex items-baseline gap-3 flex-wrap">
             <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">{{ task()!.title }}</h2>
             @if(task()!.ticket_id) {
-              <span class="text-xl sm:text-2xl font-mono text-gray-400 dark:text-gray-500">#AJR-{{ formatTicketId(task()!.ticket_id) }}</span>
+              <span class="px-3 py-1 bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 rounded-full text-lg sm:text-xl font-bold font-mono">#AJR-{{ formatTicketId(task()!.ticket_id) }}</span>
             }
         </div>
         <div class="flex flex-wrap gap-3 self-start sm:self-center">
@@ -388,7 +388,7 @@ export class TaskDetailComponent {
       } else {
         this.loading.set(false);
       }
-    }, { allowSignalWrites: true });
+    });
   }
   
   private async loadTaskDetails(id: string): Promise<void> {

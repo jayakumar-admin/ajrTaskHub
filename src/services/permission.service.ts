@@ -1,3 +1,4 @@
+
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { RolePermissions } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -50,7 +51,7 @@ export class PermissionService {
         this.allPermissions.set([]);
         this.currentUserPermissions.set(DEFAULT_PERMISSIONS);
       }
-    }, { allowSignalWrites: true });
+    });
     
     effect(() => {
       const user = this.authService.currentUser();

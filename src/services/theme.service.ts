@@ -1,3 +1,4 @@
+
 import { Injectable, signal, effect } from '@angular/core';
 
 export type Theme = 'indigo' | 'teal' | 'rose';
@@ -52,7 +53,7 @@ export class ThemeService {
         htmlElement.classList.remove('dark');
       }
       localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    }, { allowSignalWrites: true }); // Allow signal writes to update local storage
+    });
   }
 
   setTheme(theme: Theme): void {

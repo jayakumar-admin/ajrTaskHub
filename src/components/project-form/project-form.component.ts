@@ -1,3 +1,4 @@
+
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, FormControl } from '@angular/forms';
@@ -125,7 +126,7 @@ export class ProjectFormComponent {
             this.isEditMode = false;
             this.projectForm.reset();
         }
-    }, { allowSignalWrites: true });
+    });
   }
 
   onSubmit(): void {

@@ -1,3 +1,4 @@
+
 import { Injectable, signal, inject, effect, computed, NgZone } from '@angular/core';
 import { Conversation, ChatMessage, User, ChatMessageReaction } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -37,7 +38,7 @@ export class ChatService {
       } else {
         this.resetState();
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   toggleChat(): void {

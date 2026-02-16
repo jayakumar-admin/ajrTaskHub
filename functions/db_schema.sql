@@ -116,7 +116,8 @@ CREATE TABLE system_config (
     whatsapp_access_token TEXT,
     whatsapp_phone_number_id TEXT,
     whatsapp_graph_url TEXT,
-    whatsapp_status_template TEXT
+    whatsapp_status_template TEXT,
+    whatsapp_assignment_template TEXT
 );
 
 -- Chat Messages Table
@@ -161,3 +162,22 @@ INSERT INTO role_permissions (role, can_create_tasks, can_create_projects, can_u
 ('Manager', true, true, true, true, true, true, true, true, true),
 ('User', true, false, true, true, true, true, true, false, true),
 ('Viewer', false, false, false, false, false, true, true, false, false);
+
+-- Cron Jobs Table
+CREATE TABLE cron_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    schedule VARCHAR(100) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    last_run TIMESTAMPTZ,
+    next_run TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Default cron jobs
+INSERT INTO cron_jobs (name, description, schedule, enabled) VALUES
+('Daily Task Reminders', 'Sends email/WhatsApp reminders for tasks due today.', '0 9 * * *', true),
+('Weekly Summary', 'Generates and sends a weekly summary report to managers.', '0 10 * * 1', true),
+('Clean Old Notifications', 'Deletes notifications older than 90 days.', '0 2 * * *', true);

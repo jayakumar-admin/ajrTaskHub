@@ -1,3 +1,4 @@
+
 const db = require('../config/db');
 
 const getAllUsers = async () => {
@@ -54,9 +55,15 @@ const updateUserProfile = async (userId, { username, avatar_url }) => {
     return rows[0];
 };
 
+const findUserById = async (userId) => {
+    const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+    return rows[0];
+};
+
 module.exports = {
     getAllUsers,
     findUserSettingsById,
     upsertUserSettings,
     updateUserProfile,
+    findUserById,
 };

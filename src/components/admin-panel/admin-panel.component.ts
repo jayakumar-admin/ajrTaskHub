@@ -1,3 +1,4 @@
+
 import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -146,10 +147,14 @@ import { CronService } from '../../services/cron.service';
       <div class="space-y-4">
         @for(job of cronJobs(); track job.id) {
           <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-            <div class="flex flex-col md:flex-row justify-between md:items-center">
-              <div>
+            <div class="flex flex-col md:flex-row justify-between md:items-start">
+              <div class="flex-1">
                 <h4 class="font-semibold text-lg text-gray-900 dark:text-white">{{ job.name }}</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ job.description }}</p>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center space-x-4">
+                    <span>Last Run: {{ job.last_run ? (job.last_run | date:'short') : 'Never' }}</span>
+                    <span>Next Run: {{ job.next_run ? (job.next_run | date:'short') : 'N/A' }}</span>
+                </div>
               </div>
               <div class="flex items-center space-x-4 mt-4 md:mt-0">
                 <div class="flex items-center">
@@ -220,6 +225,16 @@ import { CronService } from '../../services/cron.service';
             Use placeholders: <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskTitle}}' }}</code> and <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{newStatus}}' }}</code>.
           </p>
         </div>
+        
+        <div class="col-span-full">
+          <label for="waAssignmentTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Assignment Template</label>
+          <textarea id="waAssignmentTemplate" [(ngModel)]="whatsAppConfig.whatsapp_assignment_template" name="wa_assignment_template" rows="4"
+                    class="form-input"
+                    [placeholder]="exampleAssignmentTemplate"></textarea>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Use placeholders: <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskTitle}}' }}</code> and <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{assignedBy}}' }}</code>.
+          </p>
+        </div>
 
         <div class="col-span-full flex justify-end">
           <button (click)="saveWhatsAppConfig()" 
@@ -264,12 +279,14 @@ export class AdminPanelComponent {
   cronLoading = this.cronService.loading;
 
   exampleWhatsAppTemplate = "e.g., Task '{{taskTitle}}' moved to {{newStatus}}";
+  exampleAssignmentTemplate = "e.g., You have been assigned a new task: '{{taskTitle}}' by {{assignedBy}}.";
   whatsAppConfig: SystemConfig = {
     whatsapp_integration_enabled: false,
     whatsapp_access_token: '',
     whatsapp_phone_number_id: '',
     whatsapp_graph_url: '',
-    whatsapp_status_template: ''
+    whatsapp_status_template: '',
+    whatsapp_assignment_template: ''
   };
 
   constructor() {

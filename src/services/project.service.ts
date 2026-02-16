@@ -1,3 +1,4 @@
+
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Project } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -26,7 +27,7 @@ export class ProjectService {
       } else {
         this._projects.set([]);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   async loadProjects(): Promise<void> {

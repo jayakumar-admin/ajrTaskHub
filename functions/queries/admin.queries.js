@@ -1,3 +1,4 @@
+
 const db = require('../config/db');
 
 const updateUserRole = async (userId, role) => {
@@ -29,8 +30,16 @@ const updateRolePermissions = async (role, permissions) => {
 };
 
 const getWhatsAppConfig = async () => {
-    const { rows } = await db.query('SELECT * FROM system_config WHERE id = 1');
-    return rows[0];
+    try {
+        const { rows } = await db.query('SELECT * FROM system_config WHERE id = 1');
+        return rows[0];
+    } catch (error) {
+        if (error.code === '42P01') { // undefined_table
+            console.warn('Warning: "system_config" table does not exist. Returning null config.');
+            return null;
+        }
+        throw error;
+    }
 };
 
 const saveWhatsAppConfig = async (config) => {
@@ -39,20 +48,35 @@ const saveWhatsAppConfig = async (config) => {
         whatsapp_access_token, 
         whatsapp_phone_number_id, 
         whatsapp_graph_url, 
-        whatsapp_status_template 
+        whatsapp_status_template,
+        whatsapp_assignment_template
     } = config;
 
     await db.query(
-        `INSERT INTO system_config (id, whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template)
-         VALUES (1, $1, $2, $3, $4, $5)
+        `INSERT INTO system_config (id, whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template, whatsapp_assignment_template)
+         VALUES (1, $1, $2, $3, $4, $5, $6)
          ON CONFLICT (id) DO UPDATE SET
             whatsapp_integration_enabled = $1,
             whatsapp_access_token = $2,
             whatsapp_phone_number_id = $3,
             whatsapp_graph_url = $4,
-            whatsapp_status_template = $5`,
-        [whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template]
+            whatsapp_status_template = $5,
+            whatsapp_assignment_template = $6`,
+        [whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template, whatsapp_assignment_template]
     );
+};
+
+const getCronJobs = async () => {
+    const { rows } = await db.query('SELECT * FROM cron_jobs ORDER BY name');
+    return rows;
+};
+
+const updateCronJob = async (jobId, { schedule, enabled }) => {
+    const { rows } = await db.query(
+        'UPDATE cron_jobs SET schedule = $1, enabled = $2 WHERE id = $3 RETURNING *',
+        [schedule, enabled, jobId]
+    );
+    return rows[0];
 };
 
 module.exports = {
@@ -63,4 +87,6 @@ module.exports = {
     updateRolePermissions,
     getWhatsAppConfig,
     saveWhatsAppConfig,
+    getCronJobs,
+    updateCronJob,
 };

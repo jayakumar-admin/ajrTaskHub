@@ -1,3 +1,4 @@
+
 const adminQueries = require('../queries/admin.queries');
 
 const updateUserRole = async (userId, role) => {
@@ -34,6 +35,14 @@ const saveWhatsAppConfig = async (config) => {
     await adminQueries.saveWhatsAppConfig(config);
 };
 
+const getCronJobs = async () => {
+    return await adminQueries.getCronJobs();
+};
+
+const updateCronJob = async (jobId, jobData) => {
+    return await adminQueries.updateCronJob(jobId, jobData);
+};
+
 module.exports = {
     updateUserRole,
     deleteUser,
@@ -41,4 +50,6 @@ module.exports = {
     updateRolePermissions,
     getWhatsAppConfig,
     saveWhatsAppConfig,
+    getCronJobs,
+    updateCronJob,
 };

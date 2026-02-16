@@ -148,6 +148,7 @@ export interface SystemConfig {
   whatsapp_phone_number_id?: string;
   whatsapp_graph_url?: string;
   whatsapp_status_template?: string;
+  whatsapp_assignment_template?: string;
 }
 
 export interface ChatMessageReaction {

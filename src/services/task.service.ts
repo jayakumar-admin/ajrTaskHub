@@ -59,7 +59,7 @@ export class TaskService {
       } else {
         this.resetState();
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   public resetState(): void {
