@@ -1,3 +1,4 @@
+
 import {
   Component,
   signal,
@@ -32,7 +33,7 @@ type ResumeTemplate = "classic" | "modern" | "creative" | "minimalist";
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="container mx-auto p-4 my-8">
+    <div class="container mx-auto p-4 my-8 animate-fade-in">
       <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
         AJR Tools
       </h2>
@@ -1193,4 +1194,3 @@ export class AjrToolsComponent implements OnDestroy {
     document.body.removeChild(link);
   }
 }
-

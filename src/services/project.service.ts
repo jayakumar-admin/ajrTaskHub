@@ -1,4 +1,5 @@
 
+
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Project } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -46,25 +47,27 @@ export class ProjectService {
     return computed(() => this._projects().find(p => p.id === id));
   }
 
-  async createProject(name: string, description: string, member_ids: string[]): Promise<void> {
+  async createProject(projectData: { name: string; description: string; image_url?: string | null }, member_ids: string[]): Promise<void> {
     try {
-      const newProject = await this.apiService.addProject({ name, description }, member_ids);
+      const newProject = await this.apiService.addProject(projectData, member_ids);
       this._projects.update(projects => [...projects, newProject]);
       this.notificationService.showToast('Project created successfully!', 'success');
       this.router.navigate(['/projects', newProject.id]);
     } catch (error) {
       this.handleError(error, 'Failed to create project.');
+      throw error;
     }
   }
 
-  async updateProject(id: string, name: string, description: string, member_ids: string[]): Promise<void> {
+  async updateProject(id: string, projectData: { name: string; description: string; image_url?: string | null }, member_ids: string[]): Promise<void> {
     try {
-      const updatedProject = await this.apiService.updateProject(id, { name, description }, member_ids);
+      const updatedProject = await this.apiService.updateProject(id, projectData, member_ids);
       this._projects.update(projects => projects.map(p => p.id === id ? updatedProject : p));
       this.notificationService.showToast('Project updated successfully!', 'success');
       this.router.navigate(['/projects', updatedProject.id]);
     } catch (error) {
       this.handleError(error, 'Failed to update project.');
+      throw error;
     }
   }
 

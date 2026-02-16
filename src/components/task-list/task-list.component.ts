@@ -86,7 +86,7 @@ import { SearchService } from '../../services/search.service';
     </section>
   </div>
 } @else {
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-fade-in">
       <!-- Welcome Header -->
       <section class="bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-700 dark:to-primary-800 text-white rounded-xl shadow-lg p-6 flex justify-between items-center">
           <div>
@@ -133,8 +133,8 @@ import { SearchService } from '../../services/search.service';
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">My Active Tasks</h2>
         @if(myTasks().length > 0) {
           <div class="flex overflow-x-auto space-x-6 pb-4 -mx-4 px-4">
-            @for (task of myTasks(); track task.id) {
-              <div class="flex-shrink-0 w-80">
+            @for (task of myTasks(); track task.id; let i = $index) {
+              <div class="flex-shrink-0 w-80 animate-fade-in" [style.animation-delay]="$index * 100 + 'ms'">
                 <app-task-card [task]="task" />
               </div>
             }
@@ -156,8 +156,8 @@ import { SearchService } from '../../services/search.service';
           
           @if(todaysTasks().length > 0) {
             <div class="space-y-4">
-              @for (task of todaysTasks(); track task.id) {
-                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer">
+              @for (task of todaysTasks(); track task.id; let i = $index) {
+                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer animate-fade-in" [style.animation-delay]="$index * 100 + 'ms'">
                   <div class="flex-shrink-0">
                     <div class="h-12 w-12 rounded-full flex items-center justify-center border-2 text-gray-400 dark:text-gray-500" [class]="getPriorityBorder(task.priority)">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
@@ -189,8 +189,8 @@ import { SearchService } from '../../services/search.service';
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Upcoming</h2>
           @if(upcomingTasks().length > 0) {
             <div class="space-y-4">
-              @for (task of upcomingTasks(); track task.id) {
-                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer">
+              @for (task of upcomingTasks(); track task.id; let i = $index) {
+                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer animate-fade-in" [style.animation-delay]="$index * 100 + 'ms'">
                   <div class="flex-shrink-0">
                     <div class="h-12 w-12 rounded-full flex items-center justify-center border-2 text-gray-400 dark:text-gray-500" [class]="getPriorityBorder(task.priority)">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -272,8 +272,10 @@ import { SearchService } from '../../services/search.service';
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @for (task of filteredTasks(); track task.id) {
-                <app-task-card [task]="task" />
+            @for (task of filteredTasks(); track task.id; let i = $index) {
+                <div class="animate-fade-in" [style.animation-delay]="$index * 50 + 'ms'">
+                  <app-task-card [task]="task" />
+                </div>
             }
             @empty {
                 <div class="col-span-full text-center p-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm">

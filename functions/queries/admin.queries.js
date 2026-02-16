@@ -67,8 +67,16 @@ const saveWhatsAppConfig = async (config) => {
 };
 
 const getCronJobs = async () => {
-    const { rows } = await db.query('SELECT * FROM cron_jobs ORDER BY name');
-    return rows;
+    try {
+        const { rows } = await db.query('SELECT * FROM cron_jobs ORDER BY name');
+        return rows;
+    } catch (error) {
+         if (error.code === '42P01') { // undefined_table
+            console.warn('Warning: "cron_jobs" table does not exist. Returning empty array.');
+            return [];
+        }
+        throw error;
+    }
 };
 
 const updateCronJob = async (jobId, { schedule, enabled }) => {

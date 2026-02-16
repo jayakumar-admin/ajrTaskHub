@@ -1,3 +1,4 @@
+
 import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskService } from '../../services/task.service';
@@ -11,7 +12,7 @@ import { PermissionService } from '../../services/permission.service';
   standalone: true,
   imports: [CommonModule, TaskCardComponent, SkeletonLoaderComponent],
   template: `
-    <div class="container mx-auto p-4">
+    <div class="container mx-auto p-4 animate-fade-in">
       <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Kanban Board</h2>
 
       @if (loading()) {
@@ -33,7 +34,7 @@ import { PermissionService } from '../../services/permission.service';
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">
               To Do ({{ todoTasks().length }})
             </h3>
-            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-200"
+            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-300"
                  (dragover)="onDragOver($event)"
                  (dragenter)="onDragEnter($event)"
                  (dragleave)="onDragLeave($event)"
@@ -54,7 +55,7 @@ import { PermissionService } from '../../services/permission.service';
             <h3 class="text-xl font-semibold text-blue-800 dark:text-blue-200 mb-4 border-b pb-2 border-blue-200 dark:border-blue-800">
               In Progress ({{ inProgressTasks().length }})
             </h3>
-            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-200"
+            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-300"
                  (dragover)="onDragOver($event)"
                  (dragenter)="onDragEnter($event)"
                  (dragleave)="onDragLeave($event)"
@@ -75,7 +76,7 @@ import { PermissionService } from '../../services/permission.service';
             <h3 class="text-xl font-semibold text-purple-800 dark:text-purple-200 mb-4 border-b pb-2 border-purple-200 dark:border-purple-800">
               Review ({{ reviewTasks().length }})
             </h3>
-            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-200"
+            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-300"
                  (dragover)="onDragOver($event)"
                  (dragenter)="onDragEnter($event)"
                  (dragleave)="onDragLeave($event)"
@@ -96,7 +97,7 @@ import { PermissionService } from '../../services/permission.service';
             <h3 class="text-xl font-semibold text-green-800 dark:text-green-200 mb-4 border-b pb-2 border-green-200 dark:border-green-800">
               Completed ({{ completedTasks().length }})
             </h3>
-            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-200"
+            <div class="space-y-4 min-h-[100px] p-2 rounded-lg transition-colors duration-300"
                  (dragover)="onDragOver($event)"
                  (dragenter)="onDragEnter($event)"
                  (dragleave)="onDragLeave($event)"

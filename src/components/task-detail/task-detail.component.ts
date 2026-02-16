@@ -18,7 +18,7 @@ import { ProjectService } from '../../services/project.service';
   standalone: true,
   imports: [CommonModule, DatePipe, FormsModule, RouterLink, HistoryTimelineComponent, SkeletonLoaderComponent],
   template: `
-<div class="container mx-auto p-4 my-8">
+<div class="container mx-auto p-4 my-8 animate-fade-in">
   @if (loading()) {
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
       <div class="flex justify-between items-center mb-6">
@@ -184,8 +184,8 @@ import { ProjectService } from '../../services/project.service';
 
 <!-- Attachment Preview Modal -->
 @if (showPreviewModal() && currentPreviewUrl()) {
-  <div class="fixed inset-0 bg-black bg-opacity-75 z-[100] flex justify-center items-center p-4" (click)="closePreviewModal()">
-    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 bg-black bg-opacity-75 z-[100] flex justify-center items-center p-4 animate-fade-in-fast" (click)="closePreviewModal()">
+    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col animate-scale-in" (click)="$event.stopPropagation()">
       <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
         <h4 class="text-lg font-semibold text-gray-900 dark:text-white truncate">{{ currentPreviewFileName() }}</h4>
         <button (click)="closePreviewModal()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400">
@@ -245,7 +245,7 @@ import { ProjectService } from '../../services/project.service';
 <ng-template #commentsContent>
   <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md">
     <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Comments</h3>
-    @if (canAddCommentAttachment()) {
+    @if (canAddComments()) {
       <div class="mb-6">
         <textarea [ngModel]="newCommentText()" (ngModelChange)="newCommentText.set($event)" rows="3" placeholder="Add a comment..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors" [disabled]="isSubmittingComment()"></textarea>
         <button (click)="addComment()" [disabled]="isSubmittingComment() || !newCommentText()" class="mt-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
@@ -272,7 +272,7 @@ import { ProjectService } from '../../services/project.service';
 <ng-template #attachmentsContent>
   <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md">
     <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Attachments</h3>
-    @if (canAddCommentAttachment()) {
+    @if (canAddAttachments()) {
       <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
         <input type="file" (change)="onFileSelected($event)" id="file-upload" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-800 dark:file:text-white transition-colors" [disabled]="isUploadingFile()">
         <button (click)="uploadAttachment()" [disabled]="!selectedFile || isUploadingFile()" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
@@ -301,12 +301,16 @@ import { ProjectService } from '../../services/project.service';
             </div>
             <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mb-2 text-center">{{ attachment.fileName }}</p>
             <div class="flex justify-around space-x-2 text-sm">
-              <button (click)="openPreviewModal(attachment)" class="flex-1 px-3 py-1 bg-primary-100 hover:bg-primary-200 dark:bg-primary-800 dark:hover:bg-primary-700 text-primary-700 dark:text-primary-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-                Preview
-              </button>
-              <a [href]="attachment.file_base64" [download]="attachment.fileName" class="flex-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                Download
-              </a>
+              @if (canPreviewAttachments()) {
+                <button (click)="openPreviewModal(attachment)" class="flex-1 px-3 py-1 bg-primary-100 hover:bg-primary-200 dark:bg-primary-800 dark:hover:bg-primary-700 text-primary-700 dark:text-primary-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                  Preview
+                </button>
+              }
+              @if (canDownloadAttachments()) {
+                <a [href]="attachment.file_base64" [download]="attachment.fileName" class="flex-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                  Download
+                </a>
+              }
             </div>
           </div>
         }
@@ -367,7 +371,10 @@ export class TaskDetailComponent {
   canChangeStatus = this.permissionService.canChangeStatus;
   canAssignTasks = this.permissionService.canAssignTasks;
   canApproveReject = computed(() => !this.isViewer() && (this.task() ? this.taskService.canApproveReject(this.task()!) : false));
-  canAddCommentAttachment = this.permissionService.canAddCommentAttachment;
+  canAddComments = this.permissionService.canAddComments;
+  canAddAttachments = this.permissionService.canAddAttachments;
+  canPreviewAttachments = this.permissionService.canPreviewAttachments;
+  canDownloadAttachments = this.permissionService.canDownloadAttachments;
 
   hasLiked = computed(() => {
     const userId = this.authService.currentUser()?.profile?.id;

@@ -153,15 +153,18 @@ CREATE TABLE role_permissions (
     can_access_calendar BOOLEAN,
     can_access_kanban BOOLEAN,
     can_assign_tasks BOOLEAN,
-    can_add_comment_attachment BOOLEAN
+    can_add_comments BOOLEAN,
+    can_add_attachments BOOLEAN,
+    can_preview_attachments BOOLEAN,
+    can_download_attachments BOOLEAN
 );
 
 -- Default data for roles
-INSERT INTO role_permissions (role, can_create_tasks, can_create_projects, can_use_chat, can_change_status, can_access_tools, can_access_calendar, can_access_kanban, can_assign_tasks, can_add_comment_attachment) VALUES
-('Admin', true, true, true, true, true, true, true, true, true),
-('Manager', true, true, true, true, true, true, true, true, true),
-('User', true, false, true, true, true, true, true, false, true),
-('Viewer', false, false, false, false, false, true, true, false, false);
+INSERT INTO role_permissions (role, can_create_tasks, can_create_projects, can_use_chat, can_change_status, can_access_tools, can_access_calendar, can_access_kanban, can_assign_tasks, can_add_comments, can_add_attachments, can_preview_attachments, can_download_attachments) VALUES
+('Admin', true, true, true, true, true, true, true, true, true, true, true, true),
+('Manager', true, true, true, true, true, true, true, true, true, true, true, true),
+('User', true, false, true, true, true, true, true, false, true, true, true, true),
+('Viewer', false, false, false, false, false, true, true, false, false, false, true, true);
 
 -- Cron Jobs Table
 CREATE TABLE cron_jobs (

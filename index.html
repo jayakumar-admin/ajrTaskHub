@@ -32,7 +32,7 @@
     "zone.js": "https://esm.sh/zone.js@^0.14.0?external=rxjs",
     "cropperjs": "https://esm.sh/cropperjs@1.6.2",
     "html2pdf.js": "https://esm.sh/html2pdf.js@^0.14.0?external=rxjs",
-    "@angular/common/http": "https://esm.sh/@angular/common@^21.1.4/http?external=rxjs"
+    "@angular/common/http": "https://esm.sh/@angular/common@20.0.0/http?external=rxjs"
   }
 }
 </script>
@@ -120,6 +120,36 @@
     .form-file-input {
       @apply block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-800 dark:file:text-white transition-colors cursor-pointer;
     }
+  }
+
+  /* Custom Animations */
+  @layer utilities {
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInFast {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideDownForm {
+      from { opacity: 0; transform: translateY(-20px); max-height: 0; }
+      to { opacity: 1; transform: translateY(0); max-height: 600px; /* Large enough value */ }
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    .animate-fade-in-fast { animation: fadeInFast 0.3s ease-out forwards; }
+    .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
+    .animate-slide-down-form { animation: slideDownForm 0.4s ease-out forwards; overflow: hidden; }
+    .animate-toast-in { animation: toastIn 0.4s ease-out forwards; }
   }
 
   /*

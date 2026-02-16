@@ -13,6 +13,7 @@ const TOKEN_KEY = 'ajrtaskhub_token';
 export class AuthService {
   currentUser = signal<AuthenticatedUser | null>(null);
   userSettings = signal<UserSettings | null>(null);
+  isInitializing = signal(true);
   
   private apiService = inject(ApiService);
   private notificationService = inject(NotificationService);
@@ -43,7 +44,11 @@ export class AuthService {
       } catch (error) {
         console.error('Failed to load user from token', error);
         this.logout(); // Token is invalid, so log out
+      } finally {
+        this.isInitializing.set(false);
       }
+    } else {
+      this.isInitializing.set(false);
     }
   }
 

@@ -1,4 +1,5 @@
 
+
 export interface User {
   id: string; 
   auth_id?: string; // This might not be exposed from the new backend
@@ -97,6 +98,7 @@ export interface Project {
   created_by: string;
   created_by_username?: string;
   member_ids: string[];
+  image_url?: string;
 }
 
 export interface Notification {
@@ -192,7 +194,10 @@ export interface RolePermissions {
   can_access_calendar: boolean;
   can_access_kanban: boolean;
   can_assign_tasks: boolean;
-  can_add_comment_attachment: boolean;
+  can_add_comments: boolean;
+  can_add_attachments: boolean;
+  can_preview_attachments: boolean;
+  can_download_attachments: boolean;
 }
 
 export interface CronJob {

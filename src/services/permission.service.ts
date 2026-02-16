@@ -14,7 +14,10 @@ const DEFAULT_PERMISSIONS: Omit<RolePermissions, 'role'> = {
   can_access_calendar: false,
   can_access_kanban: false,
   can_assign_tasks: false,
-  can_add_comment_attachment: false,
+  can_add_comments: false,
+  can_add_attachments: false,
+  can_preview_attachments: false,
+  can_download_attachments: false,
 };
 
 @Injectable({
@@ -40,7 +43,10 @@ export class PermissionService {
   canAccessCalendar = computed(() => this.currentUserPermissions().can_access_calendar);
   canAccessKanban = computed(() => this.currentUserPermissions().can_access_kanban);
   canAssignTasks = computed(() => this.currentUserPermissions().can_assign_tasks);
-  canAddCommentAttachment = computed(() => this.currentUserPermissions().can_add_comment_attachment);
+  canAddComments = computed(() => this.currentUserPermissions().can_add_comments);
+  canAddAttachments = computed(() => this.currentUserPermissions().can_add_attachments);
+  canPreviewAttachments = computed(() => this.currentUserPermissions().can_preview_attachments);
+  canDownloadAttachments = computed(() => this.currentUserPermissions().can_download_attachments);
 
   constructor() {
     effect(() => {

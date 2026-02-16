@@ -1,3 +1,4 @@
+
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { TaskService } from '../../services/task.service';
@@ -18,7 +19,7 @@ interface CalendarDay {
   standalone: true,
   imports: [CommonModule, DatePipe, RouterLink],
   template: `
-<div class="container mx-auto p-4 font-sans">
+<div class="container mx-auto p-4 font-sans animate-fade-in">
     <!-- View Toggle -->
     <div class="max-w-xs mx-auto p-1 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center my-6">
       <button (click)="viewMode.set('monthly')" 
