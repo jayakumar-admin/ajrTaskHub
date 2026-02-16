@@ -20,10 +20,10 @@ const findProjectById = async (projectId) => {
 };
 
 const createProject = async (projectData, creatorId) => {
-    const { name, description } = projectData;
+    const { name, description, image_url } = projectData;
     const { rows } = await db.query(
-        'INSERT INTO projects (name, description, created_by) VALUES ($1, $2, $3) RETURNING *',
-        [name, description, creatorId]
+        'INSERT INTO projects (name, description, created_by, image_url) VALUES ($1, $2, $3, $4) RETURNING *',
+        [name, description, creatorId, image_url]
     );
     return rows[0];
 };
@@ -34,10 +34,10 @@ const addProjectMembers = async (projectId, memberIds) => {
 };
 
 const updateProject = async (projectId, projectData) => {
-    const { name, description } = projectData;
+    const { name, description, image_url } = projectData;
     const { rows } = await db.query(
-        'UPDATE projects SET name = $1, description = $2, updated_at = NOW() WHERE id = $3 RETURNING *',
-        [name, description, projectId]
+        'UPDATE projects SET name = $1, description = $2, image_url = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
+        [name, description, image_url, projectId]
     );
     return rows[0];
 };

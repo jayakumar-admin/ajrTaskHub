@@ -21,16 +21,24 @@ const _hydrateTasksWithUsernames = async (tasks) => {
 const _sendAssignmentNotification = async (task) => {
     try {
         const assigneeId = task.assign_to;
-        if (!assigneeId) return;
+        if (!assigneeId) {
+            console.log(`Task ${task.id} has no assignee. Skipping assignment notification.`);
+            return;
+        }
 
+        console.log(`Attempting to send assignment notification for task ${task.id} to assignee ${assigneeId}.`);
         const assigneeSettings = await userQueries.findUserSettingsById(assigneeId);
+
         if (assigneeSettings?.whatsapp_notifications_enabled && assigneeSettings.whatsapp_number) {
             const assignedByUser = await userQueries.findUserById(task.assigned_by);
+            console.log(`Sending WhatsApp assignment notification to ${assigneeSettings.whatsapp_number}.`);
             await whatsappService.sendTaskAssignmentNotification(
                 assigneeSettings.whatsapp_number,
                 task,
                 assignedByUser.username
             );
+        } else {
+             console.log(`Assignee ${assigneeId} has no valid WhatsApp number or has disabled notifications. Skipping.`);
         }
     } catch (e) {
         console.error('Failed to send task assignment notification:', e.message);
@@ -40,14 +48,22 @@ const _sendAssignmentNotification = async (task) => {
 const _sendStatusChangeNotification = async (task) => {
     try {
         const assigneeId = task.assign_to;
-        if (!assigneeId) return;
+        if (!assigneeId) {
+            console.log(`Task ${task.id} has no assignee. Skipping status change notification.`);
+            return;
+        }
 
+        console.log(`Attempting to send status change notification for task ${task.id} to assignee ${assigneeId}.`);
         const assigneeSettings = await userQueries.findUserSettingsById(assigneeId);
+        
         if (assigneeSettings?.whatsapp_notifications_enabled && assigneeSettings.whatsapp_number) {
+            console.log(`Sending WhatsApp status change notification to ${assigneeSettings.whatsapp_number}.`);
             await whatsappService.sendStatusUpdate(
                 assigneeSettings.whatsapp_number,
                 task
             );
+        } else {
+            console.log(`Assignee ${assigneeId} has no valid WhatsApp number or has disabled notifications for status changes. Skipping.`);
         }
     } catch (e) {
         console.error('Failed to send task status change notification:', e.message);

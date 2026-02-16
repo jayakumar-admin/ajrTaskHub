@@ -50,8 +50,8 @@ app.use((err, req, res, next) => {
     res.status(500).send({ error: 'Something went wrong!' });
 });
 
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
 
-module.exports = app;
+// module.exports = app;

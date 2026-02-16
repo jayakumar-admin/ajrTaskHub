@@ -15,7 +15,9 @@ CREATE TABLE projects (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    image_url TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Project Members Junction Table
