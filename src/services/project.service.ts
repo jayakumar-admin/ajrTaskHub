@@ -61,9 +61,16 @@ export class ProjectService {
 
   async updateProject(id: string, projectData: { name: string; description: string; image_url?: string | null }, member_ids: string[]): Promise<void> {
     try {
+      const oldProject = this._projects().find(p => p.id === id);
       const updatedProject = await this.apiService.updateProject(id, projectData, member_ids);
       this._projects.update(projects => projects.map(p => p.id === id ? updatedProject : p));
       this.notificationService.showToast('Project updated successfully!', 'success');
+      
+      // Delete old image if it was changed and exists in Firebase storage
+      if (oldProject?.image_url && oldProject.image_url !== updatedProject.image_url && oldProject.image_url.includes('storage.googleapis.com')) {
+          this.apiService.deleteFile(oldProject.image_url).catch(err => console.error('Failed to delete old project image:', err));
+      }
+
       this.router.navigate(['/projects', updatedProject.id]);
     } catch (error) {
       this.handleError(error, 'Failed to update project.');
@@ -73,9 +80,16 @@ export class ProjectService {
 
   async deleteProject(id: string): Promise<void> {
     try {
+      const projectToDelete = this._projects().find(p => p.id === id);
       await this.apiService.deleteProject(id);
       this._projects.update(projects => projects.filter(p => p.id !== id));
       this.notificationService.showToast('Project deleted successfully.', 'success');
+
+      // Delete image from storage if it exists
+      if (projectToDelete?.image_url && projectToDelete.image_url.includes('storage.googleapis.com')) {
+          this.apiService.deleteFile(projectToDelete.image_url).catch(err => console.error('Failed to delete project image:', err));
+      }
+
       this.router.navigate(['/projects']);
     } catch (error) {
       this.handleError(error, 'Failed to delete project.');

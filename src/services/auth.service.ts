@@ -1,4 +1,3 @@
-
 import { Injectable, signal, inject, effect, NgZone } from '@angular/core';
 import { User, AuthenticatedUser, UserSettings } from '../shared/interfaces';
 import { ApiService } from './api.service';
@@ -75,6 +74,8 @@ export class AuthService {
       throw new Error('User not logged in');
     }
 
+    const oldAvatarUrl = user.profile.avatar_url;
+
     try {
       const updatedProfile = await this.apiService.updateUserProfile(user.profile.id, updates);
       this.currentUser.update(current => {
@@ -84,6 +85,12 @@ export class AuthService {
         return null;
       });
       this.notificationService.showToast('Profile updated successfully!', 'success');
+
+      // If avatar was changed, delete the old one from storage
+      if (updates.avatar_url && oldAvatarUrl && oldAvatarUrl.includes('storage.googleapis.com')) {
+          this.apiService.deleteFile(oldAvatarUrl).catch(err => console.error("Failed to delete old avatar:", err));
+      }
+
     } catch (error) {
       console.error('Error updating profile in AuthService:', error);
       this.notificationService.showToast('Failed to update profile.', 'error');

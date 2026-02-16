@@ -11,9 +11,10 @@ const sendMessage = async (phoneNumber, message) => {
 
     const { whatsapp_graph_url, whatsapp_phone_number_id, whatsapp_access_token } = config;
     
+    const phone = formatPhone(phoneNumber);
     const payload = {
         messaging_product: "whatsapp",
-        to: phoneNumber,
+        to: phone,
         type: "text",
         text: { "body": message }
     };
@@ -25,6 +26,7 @@ const sendMessage = async (phoneNumber, message) => {
                 'Content-Type': 'application/json'
             }
         });
+        console.log('WhatsApp message sent successfully:', response.data);
         return response.data;
     } catch (error) {
         console.error('Meta API Error:', error.response ? error.response.data : error.message);
@@ -64,7 +66,25 @@ const sendTaskAssignmentNotification = async (phoneNumber, taskTitle, assignedBy
         // Do not throw to avoid failing the main operation (task creation/update)
     }
 };
+function formatPhone(number) {
+  if (!number) return null;
 
+  // remove spaces and + signs
+  let cleaned = number.replace(/\s/g, '').replace(/\+/g, '');
+
+  // remove leading 0 if user entered 0XXXXXXXXXX
+  if (cleaned.startsWith('0')) {
+    cleaned = cleaned.substring(1);
+  }
+
+  // if already starts with 91, just add +
+  if (cleaned.startsWith('91')) {
+    return '+' + cleaned;
+  }
+
+  // otherwise add +91
+  return '+91' + cleaned;
+}
 module.exports = {
     sendMessage,
     sendTaskAssignmentNotification,

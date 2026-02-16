@@ -4,7 +4,9 @@ import { firstValueFrom } from 'rxjs';
 import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment, HistoryEntry, UserSettings, Notification, Conversation, ChatMessage, ChatMessageReaction, CronJob } from '../shared/interfaces';
 
 // In a real app, this would be an environment variable
-const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
+// const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
+const API_URL = 'http://localhost:3000/api'; // Using relative URL for proxying
+
 
 @Injectable({
   providedIn: 'root'
@@ -175,10 +177,15 @@ export class ApiService {
   // ... other chat methods
   
   // --- File Upload ---
-  uploadFile(file: File): Promise<{ url: string }> {
+  uploadFile(file: File, path: 'avatars' | 'projects' | 'general' = 'general'): Promise<{ url: string }> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('image', file); // Use 'image' to match busboy field name
+    formData.append('path', path);
     return firstValueFrom(this.http.post<{ url: string }>(`${API_URL}/upload`, formData));
+  }
+
+  deleteFile(url: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${API_URL}/upload`, { body: { url } }));
   }
 
   // --- WhatsApp ---

@@ -276,7 +276,7 @@ export class SettingsComponent {
       reader.onload = (e: any) => this.avatarUrl.set(e.target.result);
       reader.readAsDataURL(this.selectedAvatarFile);
       
-      const { url } = await this.apiService.uploadFile(this.selectedAvatarFile);
+      const { url } = await this.apiService.uploadFile(this.selectedAvatarFile, 'avatars');
       await this.authService.updateUserProfile({ avatar_url: url });
       this.notificationService.showToast('Avatar updated successfully!', 'success');
       this.selectedAvatarFile = null;

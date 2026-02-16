@@ -119,7 +119,7 @@ export class TaskService {
   }
   
   public getAttachmentsForTask(taskId: string) {
-    return computed(() => this._allAttachments().filter(a => a.taskId === taskId));
+    return computed(() => this._allAttachments().filter(a => a.taskId == taskId));
   }
 
   public getHistoryForTask(taskId: string) {
