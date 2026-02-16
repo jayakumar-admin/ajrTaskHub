@@ -209,3 +209,13 @@ export interface CronJob {
   last_run?: string;
   next_run?: string;
 }
+
+export interface WhatsAppLog {
+  id: string;
+  phone_number: string;
+  message_content: string;
+  status: 'success' | 'failure';
+  error_message?: string;
+  meta_message_id?: string;
+  sent_at: string;
+}

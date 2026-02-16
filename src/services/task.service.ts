@@ -1,11 +1,11 @@
 
+
 import { Injectable, computed, signal, effect, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { Task, Comment, Attachment, HistoryEntry, Subtask, TaskStatus } from '../shared/interfaces';
 import { NotificationService } from './notification.service';
 import { AuthService } from './auth.service';
 import { UuidService } from './uuid.service';
-import { WhatsAppService } from './whatsapp.service';
 import { UserService } from './user.service';
 import { ProjectService } from './project.service';
 import { StatusAnimationService } from './status-animation.service';
@@ -24,7 +24,6 @@ export class TaskService {
   private apiService = inject(ApiService);
   private notificationService = inject(NotificationService);
   private uuidService = inject(UuidService);
-  private whatsappService = inject(WhatsAppService);
   private userService = inject(UserService);
   private projectService = inject(ProjectService);
   private statusAnimationService = inject(StatusAnimationService);
@@ -119,7 +118,7 @@ export class TaskService {
   }
   
   public getAttachmentsForTask(taskId: string) {
-    return computed(() => this._allAttachments().filter(a => a.taskId == taskId));
+    return computed(() => this._allAttachments().filter(a => a.taskId === taskId));
   }
 
   public getHistoryForTask(taskId: string) {
@@ -170,7 +169,6 @@ export class TaskService {
 
       if (originalTask && originalTask.status !== modifiedTask.status) {
         this.statusAnimationService.show(`Status changed to ${modifiedTask.status.replace('-', ' ')}`);
-        this.checkAndSendWhatsAppNotification(modifiedTask);
       }
       return hydratedTask;
     } catch (error) {
@@ -272,15 +270,6 @@ export class TaskService {
       this.handleError(error, 'Failed to update like status.');
       this._allTasks.update(tasks => tasks.map(t => t.id === taskId ? task : t)); // Revert
     }
-  }
-
-  private async checkAndSendWhatsAppNotification(task: Task) {
-    try {
-      const assigneeSettings = await this.apiService.fetchUserSettings(); // Assuming this fetches for current user if target is not specified, or needs adjustment
-      if (assigneeSettings && assigneeSettings.whatsapp_notifications_enabled && assigneeSettings.whatsapp_number) {
-        await this.whatsappService.sendStatusUpdate(assigneeSettings.whatsapp_number, task.title, task.status);
-      }
-    } catch (err) { console.warn('Failed to send WhatsApp notification:', err); }
   }
 
   private handleError(error: any, defaultMessage: string) {

@@ -1,5 +1,4 @@
-
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
 import { RolePermissions } from '../shared/interfaces';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
@@ -24,9 +23,18 @@ const DEFAULT_PERMISSIONS: Omit<RolePermissions, 'role'> = {
   providedIn: 'root'
 })
 export class PermissionService {
-  private apiService = inject(ApiService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+
+  // For lazy injection to break circular dependency
+  private injector = inject(Injector);
+  private _apiService: ApiService | undefined;
+  private get apiService(): ApiService {
+    if (!this._apiService) {
+      this._apiService = this.injector.get(ApiService);
+    }
+    return this._apiService;
+  }
 
   private allPermissions = signal<RolePermissions[]>([]);
   private currentUserPermissions = signal<Omit<RolePermissions, 'role'>>(DEFAULT_PERMISSIONS);

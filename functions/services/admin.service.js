@@ -43,6 +43,10 @@ const updateCronJob = async (jobId, jobData) => {
     return await adminQueries.updateCronJob(jobId, jobData);
 };
 
+const getWhatsAppLogs = async () => {
+    return await adminQueries.getWhatsAppLogs();
+};
+
 module.exports = {
     updateUserRole,
     deleteUser,
@@ -52,4 +56,5 @@ module.exports = {
     saveWhatsAppConfig,
     getCronJobs,
     updateCronJob,
+    getWhatsAppLogs,
 };

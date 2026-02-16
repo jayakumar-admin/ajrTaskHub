@@ -24,5 +24,8 @@ router.post('/whatsapp-config', adminController.saveWhatsAppConfig);
 router.get('/cron-jobs', adminController.getCronJobs);
 router.put('/cron-jobs/:jobId', adminController.updateCronJob);
 
+// WhatsApp Logs
+router.get('/whatsapp-logs', adminController.getWhatsAppLogs);
+
 
 module.exports = router;

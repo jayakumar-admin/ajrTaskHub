@@ -87,6 +87,21 @@ const updateCronJob = async (jobId, { schedule, enabled }) => {
     return rows[0];
 };
 
+const getWhatsAppLogs = async () => {
+    try {
+        const { rows } = await db.query(
+            'SELECT * FROM whatsapp_logs ORDER BY sent_at DESC LIMIT 100'
+        );
+        return rows;
+    } catch (error) {
+        if (error.code === '42P01') { // undefined_table
+            console.warn('Warning: "whatsapp_logs" table does not exist. Returning empty array.');
+            return [];
+        }
+        throw error;
+    }
+};
+
 module.exports = {
     updateUserRole,
     deleteUserById,
@@ -97,4 +112,5 @@ module.exports = {
     saveWhatsAppConfig,
     getCronJobs,
     updateCronJob,
+    getWhatsAppLogs,
 };

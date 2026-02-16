@@ -117,7 +117,9 @@ export class TaskFormComponent {
         });
         
         this.subtasks.clear();
-        task.subtasks.forEach(sub => this.subtasks.push(this.fb.group({ ...sub })));
+        if (Array.isArray(task.subtasks)) {
+          task.subtasks.forEach(sub => this.subtasks.push(this.fb.group({ ...sub })));
+        }
 
         const userList = this.users();
         const taggedUsersBools = userList.map(u => task.tagged_users?.includes(u.id) ?? false);

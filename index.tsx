@@ -15,7 +15,7 @@ import { authInterceptor } from "./src/interceptors/auth.interceptor";
 bootstrapApplication(AppComponent, {
   providers: [
     provideZonelessChangeDetection(),
-    provideRouter(routes, withHashLocation()),
+    provideRouter(routes),
     provideHttpClient(
       withInterceptors([authInterceptor])
     ),

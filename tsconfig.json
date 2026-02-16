@@ -28,6 +28,7 @@
     "./index.tsx"
   ],
   "angularCompilerOptions": {
-    "disableTypeScriptVersionCheck": true
+    "disableTypeScriptVersionCheck": true,
+    "enableResourceInlining": true
   }
 }

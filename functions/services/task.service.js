@@ -1,4 +1,5 @@
 
+
 const taskQueries = require('../queries/task.queries');
 const userQueries = require('../queries/user.queries');
 const whatsappService = require('./whatsapp.service');
@@ -27,12 +28,29 @@ const _sendAssignmentNotification = async (task) => {
             const assignedByUser = await userQueries.findUserById(task.assigned_by);
             await whatsappService.sendTaskAssignmentNotification(
                 assigneeSettings.whatsapp_number,
-                task.title,
+                task,
                 assignedByUser.username
             );
         }
     } catch (e) {
         console.error('Failed to send task assignment notification:', e.message);
+    }
+};
+
+const _sendStatusChangeNotification = async (task) => {
+    try {
+        const assigneeId = task.assign_to;
+        if (!assigneeId) return;
+
+        const assigneeSettings = await userQueries.findUserSettingsById(assigneeId);
+        if (assigneeSettings?.whatsapp_notifications_enabled && assigneeSettings.whatsapp_number) {
+            await whatsappService.sendStatusUpdate(
+                assigneeSettings.whatsapp_number,
+                task
+            );
+        }
+    } catch (e) {
+        console.error('Failed to send task status change notification:', e.message);
     }
 };
 
@@ -62,6 +80,10 @@ const updateTask = async (taskId, taskData, userId) => {
 
     if (originalTask.status !== updatedTask.status) {
         await taskQueries.createHistoryEntry(taskId, `Status changed from ${originalTask.status} to ${updatedTask.status}`, userId);
+        // Send notification only if the assignee is not the user who made the change
+        if (updatedTask.assign_to && updatedTask.assign_to !== userId) {
+            _sendStatusChangeNotification(updatedTask);
+        }
     }
 
     if (originalTask.assign_to !== updatedTask.assign_to) {

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment, HistoryEntry, UserSettings, Notification, Conversation, ChatMessage, ChatMessageReaction, CronJob } from '../shared/interfaces';
+import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment, HistoryEntry, UserSettings, Notification, Conversation, ChatMessage, ChatMessageReaction, CronJob, WhatsAppLog } from '../shared/interfaces';
 
 // In a real app, this would be an environment variable
 // const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
@@ -12,7 +12,8 @@ const API_URL = 'http://localhost:3000/api'; // Using relative URL for proxying
   providedIn: 'root'
 })
 export class ApiService {
-  private http = inject(HttpClient);
+  // FIX: Explicitly type `http` as HttpClient to prevent type inference issues.
+  private http: HttpClient = inject(HttpClient);
 
   // --- Auth ---
   login(credentials: {email: string, password: string}): Promise<{token: string, user: User}> {
@@ -144,6 +145,10 @@ export class ApiService {
     return firstValueFrom(this.http.put<CronJob>(`${API_URL}/admin/cron-jobs/${job.id}`, job));
   }
   
+  fetchWhatsAppLogs(): Promise<WhatsAppLog[]> {
+    return firstValueFrom(this.http.get<WhatsAppLog[]>(`${API_URL}/admin/whatsapp-logs`));
+  }
+
   // --- Notifications ---
   fetchNotifications(): Promise<Notification[]> {
       return firstValueFrom(this.http.get<Notification[]>(`${API_URL}/notifications`));

@@ -40,9 +40,9 @@ const angularAppPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(angularAppPath));
 
 // For all other GET requests, send back index.html, so Angular routing can take over
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(angularAppPath, 'index.html'));
-// });
+app.get('*', (req, res) => {
+  res.sendFile(path.join(angularAppPath, 'index.html'));
+});
 
 // Global error handler
 app.use((err, req, res, next) => {

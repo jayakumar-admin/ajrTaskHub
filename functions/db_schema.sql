@@ -1,4 +1,3 @@
-
 -- Users Table
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -184,3 +183,14 @@ INSERT INTO cron_jobs (name, description, schedule, enabled) VALUES
 ('Daily Task Reminders', 'Sends email/WhatsApp reminders for tasks due today.', '0 9 * * *', true),
 ('Weekly Summary', 'Generates and sends a weekly summary report to managers.', '0 10 * * 1', true),
 ('Clean Old Notifications', 'Deletes notifications older than 90 days.', '0 2 * * *', true);
+
+-- WhatsApp Logs Table
+CREATE TABLE whatsapp_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone_number VARCHAR(50) NOT NULL,
+    message_content TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL, -- 'success' or 'failure'
+    error_message TEXT,
+    meta_message_id VARCHAR(255),
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

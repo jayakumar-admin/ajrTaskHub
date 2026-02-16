@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, Injector } from '@angular/core';
 import { ChatToast, Notification } from '../shared/interfaces';
 import { UuidService } from './uuid.service';
 import { ApiService } from './api.service';
@@ -23,7 +23,16 @@ export class NotificationService {
   notifications = signal<Notification[]>([]);
 
   private uuidService = inject(UuidService);
-  private apiService = inject(ApiService);
+  
+  // For lazy injection to break circular dependency
+  private injector = inject(Injector);
+  private _apiService: ApiService | undefined;
+  private get apiService(): ApiService {
+    if (!this._apiService) {
+      this._apiService = this.injector.get(ApiService);
+    }
+    return this._apiService;
+  }
 
   unreadCount = computed(() => this.notifications().filter(n => !n.read).length);
 

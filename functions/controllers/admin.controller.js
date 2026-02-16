@@ -75,6 +75,15 @@ const updateCronJob = async (req, res) => {
     }
 };
 
+const getWhatsAppLogs = async (req, res) => {
+    try {
+        const logs = await adminService.getWhatsAppLogs();
+        res.json(logs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     updateUserRole,
     deleteUser,
@@ -84,4 +93,5 @@ module.exports = {
     saveWhatsAppConfig,
     getCronJobs,
     updateCronJob,
+    getWhatsAppLogs,
 };

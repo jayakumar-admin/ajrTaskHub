@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, effect, NgZone } from '@angular/core';
+import { Injectable, signal, inject, effect, NgZone, Injector } from '@angular/core';
 import { User, AuthenticatedUser, UserSettings } from '../shared/interfaces';
 import { ApiService } from './api.service';
 import { NotificationService } from './notification.service';
@@ -14,13 +14,28 @@ export class AuthService {
   userSettings = signal<UserSettings | null>(null);
   isInitializing = signal(true);
   
-  private apiService = inject(ApiService);
   private notificationService = inject(NotificationService);
   private router: Router = inject(Router);
   private ngZone: NgZone = inject(NgZone);
+  
+  // For lazy injection to break circular dependency with HttpClient -> Interceptor
+  private injector = inject(Injector);
+  private _apiService: ApiService | undefined;
+  private get apiService(): ApiService {
+    if (!this._apiService) {
+      this._apiService = this.injector.get(ApiService);
+    }
+    return this._apiService;
+  }
 
   constructor() {
-    this.loadUserFromToken();
+    // Using setTimeout to break the synchronous DI cycle during app bootstrap.
+    // The DI cycle is: AuthGuard -> AuthService -> ApiService -> HttpClient -> AuthInterceptor -> AuthService
+    // Moving the initial token load to a macrotask ensures the AuthService is fully constructed
+    // before the interceptor needs it.
+    setTimeout(() => {
+      this.loadUserFromToken();
+    }, 0);
 
     // Effect to load user settings when currentUser changes
     effect(() => {
