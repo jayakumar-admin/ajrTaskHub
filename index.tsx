@@ -1,5 +1,7 @@
 
+
 import { bootstrapApplication } from '@angular/platform-browser';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withHashLocation } from '@angular/router';
 import { AppComponent } from './src/app.component';
 import { routes } from './src/app.routes';
@@ -14,8 +16,9 @@ import { authInterceptor } from "./src/interceptors/auth.interceptor";
 
 bootstrapApplication(AppComponent, {
   providers: [
+    provideNoopAnimations(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(routes, withHashLocation()),
     provideHttpClient(
       withInterceptors([authInterceptor])
     ),

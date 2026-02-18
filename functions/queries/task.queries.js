@@ -66,7 +66,7 @@ const createComment = async (taskId, text, userId) => {
 };
 
 const getAllComments = async () => {
-    const { rows } = await db.query('SELECT * FROM comments');
+    const { rows } = await db.query('SELECT c.*, u.username FROM comments c JOIN users u ON c.user_id = u.id');
     return rows;
 }
 

@@ -76,7 +76,7 @@ export class TaskService {
         this.apiService.fetchTasks(),
         this.apiService.fetchAllComments()
       ]);
-      this._allTasks.set(this.hydrateTasksWithUsernames(tasks));
+      this._allTasks.set(this.hydrateTasks(tasks));
       this._allComments.set(comments);
     } catch (error) {
       this.handleError(error, 'Failed to load initial data.');
@@ -90,11 +90,11 @@ export class TaskService {
     this.notificationService.showToast('Data refreshed.', 'info');
   }
 
-  private hydrateTasksWithUsernames(tasks: Task[]): Task[] {
-      return tasks.map(task => this.hydrateTaskWithUsernames(task));
+  private hydrateTasks(tasks: Task[]): Task[] {
+      return tasks.map(task => this.hydrateTask(task));
   }
 
-  private hydrateTaskWithUsernames(task: Task): Task {
+  private hydrateTask(task: Task): Task {
     const assignedToUser = this.userService.users().find(u => u.id === task.assign_to);
     const assignedByUser = this.userService.users().find(u => u.id === task.assigned_by);
     const updatedByUser = this.userService.users().find(u => u.id === task.updated_by);
@@ -109,7 +109,7 @@ export class TaskService {
   public getTaskById(id: string) {
     return computed(() => {
       const task = this._allTasks().find(t => t.id === id);
-      return task ? this.hydrateTaskWithUsernames(task) : undefined;
+      return task ? this.hydrateTask(task) : undefined;
     });
   }
   
@@ -149,7 +149,7 @@ export class TaskService {
   public async addTask(task: Omit<Task, 'id' | 'ticket_id' | 'created_at' | 'updated_by' | 'updated_by_username' | 'assigned_by_username' | 'assigned_to_username' | 'like_count' | 'liked_by_users'>): Promise<Task> {
     try {
       const addedTask = await this.apiService.addTask(task);
-      const hydratedTask = this.hydrateTaskWithUsernames(addedTask);
+      const hydratedTask = this.hydrateTask(addedTask);
       this._allTasks.update(tasks => [...tasks, hydratedTask]);
       this.notificationService.showToast(`Task "${addedTask.title}" created!`, 'success');
       return hydratedTask;
@@ -163,7 +163,7 @@ export class TaskService {
     const originalTask = this._allTasks().find(t => t.id === updatedTask.id);
     try {
       const modifiedTask = await this.apiService.updateTask(updatedTask.id, updatedTask);
-      const hydratedTask = this.hydrateTaskWithUsernames(modifiedTask);
+      const hydratedTask = this.hydrateTask(modifiedTask);
       this._allTasks.update(tasks => tasks.map(t => t.id === modifiedTask.id ? hydratedTask : t));
       this.notificationService.showToast(`Task "${modifiedTask.title}" updated!`, 'success');
 

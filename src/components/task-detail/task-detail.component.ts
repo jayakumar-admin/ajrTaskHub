@@ -1,4 +1,3 @@
-
 import { Component, inject, computed, signal, effect } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -12,11 +11,12 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SkeletonLoaderComponent } from '../skeleton-loader/skeleton-loader.component';
 import { PermissionService } from '../../services/permission.service';
 import { ProjectService } from '../../services/project.service';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 
 @Component({
   selector: 'app-task-detail',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, RouterLink, HistoryTimelineComponent, SkeletonLoaderComponent],
+  imports: [CommonModule, DatePipe, FormsModule, RouterLink, HistoryTimelineComponent, SkeletonLoaderComponent, NgxExtendedPdfViewerModule],
   template: `
 <div class="container mx-auto p-4 my-8 animate-fade-in">
   @if (loading()) {
@@ -202,9 +202,20 @@ import { ProjectService } from '../../services/project.service';
         } @else if (currentPreviewType() === 'audio') {
           <audio [src]="currentPreviewUrl()" controls class="w-full max-w-md"></audio>
         } @else if (currentPreviewType() === 'pdf') {
-          <iframe [src]="currentPreviewUrl()" class="w-full h-full border-none rounded-md" loading="lazy">
-            This browser does not support PDFs. Please <a [href]="currentPreviewUrl()" target="_blank" class="text-primary-600 hover:underline">download the PDF</a> to view it.
-          </iframe>
+          <ngx-extended-pdf-viewer [src]="currentPreviewUrl()" 
+                                   [useBrowserLocale]="true"
+                                   height="100%"
+                                   width="100%"
+                                   [showHandToolButton]="true"
+                                   [showOpenFileButton]="false"
+                                   [showPrintButton]="true"
+                                   [showDownloadButton]="true"
+                                   [showBookmarkButton]="false"
+                                   [showPagingButtons]="true"
+                                   [showPresentationModeButton]="true"
+                                   [showSidebarButton]="false"
+                                   [zoom]="'auto'">
+          </ngx-extended-pdf-viewer>
         } @else if (currentPreviewType() === 'text') {
           <iframe [src]="currentPreviewUrl()" class="w-full h-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" loading="lazy">
             Your browser does not support embedded text files.
@@ -274,43 +285,47 @@ import { ProjectService } from '../../services/project.service';
     <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Attachments</h3>
     @if (canAddAttachments()) {
       <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
-        <input type="file" (change)="onFileSelected($event)" id="file-upload" class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-800 dark:file:text-white transition-colors" [disabled]="isUploadingFile()">
+        <input type="file" (change)="onFileSelected($event)" id="file-upload" class="form-file-input" [disabled]="isUploadingFile()">
         <button (click)="uploadAttachment()" [disabled]="!selectedFile || isUploadingFile()" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
           @if(isUploadingFile()){ Uploading... } @else { Upload }
         </button>
       </div>
     }
     @if (attachments().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         @for (attachment of attachments(); track attachment.id) {
-          <div class="bg-gray-100 dark:bg-gray-700 rounded-lg shadow-sm p-4 flex flex-col justify-between">
-            <div class="flex items-center justify-center h-20 w-full mb-3 text-primary-500 dark:text-primary-400">
+          <div class="bg-white dark:bg-gray-700/50 rounded-lg shadow-sm overflow-hidden flex flex-col group transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+            <div class="h-28 w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 relative">
               @if (getIconForFileType(attachment.fileName) === 'image') {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              } @else if (getIconForFileType(attachment.fileName) === 'pdf') {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
-              } @else if (getIconForFileType(attachment.fileName) === 'video') {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              } @else if (getIconForFileType(attachment.fileName) === 'audio') {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v14M9 19c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm0 0H7m2 0H5m0 0a2 2 0 110 4 2 2 0 010-4zm12 0H9" /></svg>
-              } @else if (getIconForFileType(attachment.fileName) === 'text') {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <img [src]="attachment.file_url" [alt]="attachment.fileName" class="h-full w-full object-cover">
               } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                @if (getIconForFileType(attachment.fileName) === 'pdf') {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v5a1 1 0 001 1h5" /><path stroke-linecap="round" stroke-linejoin="round" d="M10 12h4m-4 4h4m-4-8h.01" /></svg>
+                } @else if (getIconForFileType(attachment.fileName) === 'video') {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                } @else if (getIconForFileType(attachment.fileName) === 'audio') {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v14M9 19c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zm0 0H7m2 0H5m0 0a2 2 0 110 4 2 2 0 010-4zm12 0H9" /></svg>
+                } @else if (getIconForFileType(attachment.fileName) === 'text') {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                }
               }
             </div>
-            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mb-2 text-center">{{ attachment.fileName }}</p>
-            <div class="flex justify-around space-x-2 text-sm">
-              @if (canPreviewAttachments()) {
-                <button (click)="openPreviewModal(attachment)" class="flex-1 px-3 py-1 bg-primary-100 hover:bg-primary-200 dark:bg-primary-800 dark:hover:bg-primary-700 text-primary-700 dark:text-primary-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-                  Preview
-                </button>
-              }
-              @if (canDownloadAttachments()) {
-                <a [href]="attachment.file_base64" [download]="attachment.fileName" class="flex-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-                  Download
-                </a>
-              }
+            <div class="p-3 flex flex-col flex-grow">
+              <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mb-2 flex-grow" [title]="attachment.fileName">{{ attachment.fileName }}</p>
+              <div class="flex justify-around space-x-2 text-sm mt-auto">
+                @if (canPreviewAttachments()) {
+                  <button (click)="openPreviewModal(attachment)" class="flex-1 px-3 py-1 bg-primary-100 hover:bg-primary-200 dark:bg-primary-800 dark:hover:bg-primary-700 text-primary-700 dark:text-primary-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
+                    Preview
+                  </button>
+                }
+                @if (canDownloadAttachments()) {
+                  <a [href]="attachment.file_url" [download]="attachment.fileName" class="flex-1 px-3 py-1 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 rounded-md text-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Download
+                  </a>
+                }
+              </div>
             </div>
           </div>
         }
@@ -395,7 +410,7 @@ export class TaskDetailComponent {
       } else {
         this.loading.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
   }
   
   private async loadTaskDetails(id: string): Promise<void> {
@@ -505,10 +520,12 @@ export class TaskDetailComponent {
     this.currentPreviewType.set(fileType);
     this.currentPreviewFileName.set(attachment.fileName);
     
-    if (fileType === 'pdf' || fileType === 'text') {
-      this.currentPreviewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(attachment.file_base64));
+    // The new PDF viewer and regular media elements take a direct string URL.
+    // Iframes for text files still need a sanitized URL for security.
+    if (fileType === 'text') {
+      this.currentPreviewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(attachment.file_url));
     } else {
-      this.currentPreviewUrl.set(attachment.file_base64);
+      this.currentPreviewUrl.set(attachment.file_url);
     }
 
     this.showPreviewModal.set(true);

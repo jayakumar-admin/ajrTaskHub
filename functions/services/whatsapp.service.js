@@ -54,7 +54,7 @@ const sendTaskAssignmentNotification = async (phoneNumber, task, assignedByUsern
         return;
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://ajrhub.web.app';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://your-app-domain.com';
     const taskLink = `${frontendUrl}/tasks/${task.id}`;
 
     const message = config.whatsapp_assignment_template
@@ -107,7 +107,7 @@ const sendStatusUpdate = async (phoneNumber, task) => {
         return;
     }
 
-    const frontendUrl = process.env.FRONTEND_URL || 'https://ajrhub.web.app';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://your-app-domain.com';
     const taskLink = `${frontendUrl}/tasks/${task.id}`;
 
     const message = config.whatsapp_status_template

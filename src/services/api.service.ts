@@ -1,19 +1,84 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment, HistoryEntry, UserSettings, Notification, Conversation, ChatMessage, ChatMessageReaction, CronJob, WhatsAppLog } from '../shared/interfaces';
 
 // In a real app, this would be an environment variable
-// const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
-const API_URL = 'http://localhost:3000/api'; // Using relative URL for proxying
-
+const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  // FIX: Explicitly type `http` as HttpClient to prevent type inference issues.
   private http: HttpClient = inject(HttpClient);
+
+  // --- Mappers ---
+  private mapTask(t: any): Task {
+    return {
+      id: t.id,
+      ticket_id: t.ticket_id,
+      title: t.title,
+      description: t.description,
+      type: t.type,
+      priority: t.priority,
+      duration: t.duration,
+      start_date: t.start_date,
+      due_date: t.due_date,
+      status: t.status,
+      assign_to: t.assign_to,
+      assigned_to_username: t.assigned_to_username,
+      assigned_by: t.assigned_by,
+      assigned_by_username: t.assigned_by_username,
+      approval_required: t.approval_required,
+      approval_status: t.approval_status,
+      updated_by: t.updated_by,
+      updated_by_username: t.updated_by_username,
+      created_at: t.created_at,
+      like_count: (t.liked_by_users || []).length,
+      tags: t.tags || [],
+      tagged_users: t.tagged_users || [],
+      subtasks: t.subtasks || [],
+      reminder_option: t.reminder_option,
+      repeat_option: t.repeat_option,
+      liked_by_users: t.liked_by_users || [],
+      project_id: t.project_id
+    };
+  }
+  
+  private mapComment(c: any): Comment {
+    return {
+        id: c.id,
+        taskId: c.task_id,
+        userId: c.user_id,
+        username: c.username,
+        text: c.text,
+        createdAt: c.created_at
+    };
+  }
+
+  private mapAttachment(a: any): Attachment {
+    return {
+        id: a.id,
+        taskId: a.task_id,
+        fileName: a.file_name,
+        file_url: a.file_url,
+        uploadedBy: a.uploaded_by,
+        uploaded_by_username: a.uploaded_by_username,
+        uploadedAt: a.uploaded_at
+    };
+  }
+  
+  private mapHistoryEntry(h: any): HistoryEntry {
+    return {
+        id: h.id,
+        taskId: h.task_id,
+        action: h.action,
+        userId: h.user_id,
+        username: h.username,
+        timestamp: h.timestamp,
+        details: h.details
+    };
+  }
 
   // --- Auth ---
   login(credentials: {email: string, password: string}): Promise<{token: string, user: User}> {
@@ -30,15 +95,21 @@ export class ApiService {
 
   // --- Tasks ---
   fetchTasks(): Promise<Task[]> {
-    return firstValueFrom(this.http.get<Task[]>(`${API_URL}/tasks`));
+    return firstValueFrom(this.http.get<any[]>(`${API_URL}/tasks`).pipe(
+      map(tasks => tasks.map(t => this.mapTask(t)))
+    ));
   }
 
   addTask(taskData: Partial<Task>): Promise<Task> {
-    return firstValueFrom(this.http.post<Task>(`${API_URL}/tasks`, taskData));
+    return firstValueFrom(this.http.post<any>(`${API_URL}/tasks`, taskData).pipe(
+      map(t => this.mapTask(t))
+    ));
   }
 
   updateTask(taskId: string, taskData: Partial<Task>): Promise<Task> {
-    return firstValueFrom(this.http.put<Task>(`${API_URL}/tasks/${taskId}`, taskData));
+    return firstValueFrom(this.http.put<any>(`${API_URL}/tasks/${taskId}`, taskData).pipe(
+      map(t => this.mapTask(t))
+    ));
   }
 
   deleteTask(taskId: string): Promise<void> {
@@ -47,27 +118,39 @@ export class ApiService {
   
   // --- Task Sub-resources ---
   fetchComments(taskId: string): Promise<Comment[]> {
-    return firstValueFrom(this.http.get<Comment[]>(`${API_URL}/tasks/${taskId}/comments`));
+    return firstValueFrom(this.http.get<any[]>(`${API_URL}/tasks/${taskId}/comments`).pipe(
+      map(comments => comments.map(c => this.mapComment(c)))
+    ));
   }
 
   fetchAllComments(): Promise<Comment[]> {
-    return firstValueFrom(this.http.get<Comment[]>(`${API_URL}/comments/all`));
+    return firstValueFrom(this.http.get<any[]>(`${API_URL}/comments/all`).pipe(
+      map(comments => comments.map(c => this.mapComment(c)))
+    ));
   }
 
   addComment(taskId: string, text: string): Promise<Comment> {
-    return firstValueFrom(this.http.post<Comment>(`${API_URL}/tasks/${taskId}/comments`, { text }));
+    return firstValueFrom(this.http.post<any>(`${API_URL}/tasks/${taskId}/comments`, { text }).pipe(
+      map(c => this.mapComment(c))
+    ));
   }
 
   fetchAttachments(taskId: string): Promise<Attachment[]> {
-    return firstValueFrom(this.http.get<Attachment[]>(`${API_URL}/tasks/${taskId}/attachments`));
+    return firstValueFrom(this.http.get<any[]>(`${API_URL}/tasks/${taskId}/attachments`).pipe(
+      map(attachments => attachments.map(a => this.mapAttachment(a)))
+    ));
   }
 
   addAttachment(taskId: string, file_url: string, fileName: string): Promise<Attachment> {
-      return firstValueFrom(this.http.post<Attachment>(`${API_URL}/tasks/${taskId}/attachments`, { file_url, fileName }));
+      return firstValueFrom(this.http.post<any>(`${API_URL}/tasks/${taskId}/attachments`, { file_url, fileName }).pipe(
+        map(a => this.mapAttachment(a))
+      ));
   }
 
   fetchHistory(taskId: string): Promise<HistoryEntry[]> {
-    return firstValueFrom(this.http.get<HistoryEntry[]>(`${API_URL}/tasks/${taskId}/history`));
+    return firstValueFrom(this.http.get<any[]>(`${API_URL}/tasks/${taskId}/history`).pipe(
+      map(historyEntries => historyEntries.map(h => this.mapHistoryEntry(h)))
+    ));
   }
 
   likeTask(taskId: string): Promise<void> {

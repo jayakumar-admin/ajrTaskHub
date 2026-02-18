@@ -15,14 +15,14 @@ export class GeminiService {
   constructor() {
     // FIX: Initialize GoogleGenAI according to guidelines
     // The API key MUST be provided as an environment variable `process.env.API_KEY`
-    if (false) {
+    if (!process.env.API_KEY) {
       console.error("CRITICAL: Gemini API Key is missing from environment variables (process.env.API_KEY)");
       this.notificationService.showToast("Gemini API Key is not configured.", "error", 10000);
       // Fallback to a dummy implementation to avoid crashing the app
       this.ai = { models: {} } as GoogleGenAI; 
       return;
     }
-    this.ai = new GoogleGenAI({ apiKey: 'AIzaSyCmaX9ZyNh4uMrKYsNp3y6F6oT-gLL_bi8' });
+    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   /**

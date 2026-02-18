@@ -22,40 +22,45 @@ import { TaskCardComponent } from '../task-card/task-card.component';
           <app-skeleton-loader height="150px" customClass="mt-6"/>
         </div>
       } @else if (project()) {
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
-          <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-            <div>
-              <h2 class="text-3xl font-bold text-gray-900 dark:text-white">{{ project()!.name }}</h2>
-              <p class="text-gray-600 dark:text-gray-400 mt-2">{{ project()!.description }}</p>
-              <div class="flex items-center -space-x-2 mt-4">
-                @for(member of getProjectMembers(project()!.member_ids); track member.id) {
-                  <img [src]="getAvatar(member)" [title]="member.username" class="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-800" alt="member avatar">
-                }
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+           @if(project()!.image_url) {
+            <div class="h-48 md:h-64 bg-cover bg-center" [style.background-image]="'url(' + project()!.image_url + ')'"></div>
+           }
+          <div class="p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+              <div>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white">{{ project()!.name }}</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2 max-w-2xl">{{ project()!.description }}</p>
+                <div class="flex items-center -space-x-2 mt-4">
+                  @for(member of getProjectMembers(project()!.member_ids); track member.id) {
+                    <img [src]="getAvatar(member)" [title]="member.username" class="w-10 h-10 rounded-full object-cover ring-2 ring-white dark:ring-gray-800" alt="member avatar">
+                  }
+                </div>
               </div>
+              @if(canManage()) {
+                <div class="flex-shrink-0 flex items-center gap-2">
+                  <a [routerLink]="['/projects', project()!.id, 'edit']" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md flex items-center">Edit</a>
+                  <button (click)="deleteProject(project()!.id)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md flex items-center">Delete</button>
+                </div>
+              }
             </div>
-            @if(canManage()) {
-              <div class="flex-shrink-0 flex items-center gap-2">
-                <a [routerLink]="['/projects', project()!.id, 'edit']" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md flex items-center">Edit</a>
-                <button (click)="deleteProject(project()!.id)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md flex items-center">Delete</button>
-              </div>
-            }
-          </div>
 
-          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Tasks in this Project ({{ projectTasks().length }})</h3>
-              <a [routerLink]="['/tasks/new']" [queryParams]="{ projectId: project()!.id }" class="inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md">Add Task to Project</a>
-            </div>
-             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @for (task of projectTasks(); track task.id) {
-                    <app-task-card [task]="task" />
-                }
-                @empty {
-                    <div class="col-span-full text-center p-12 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <p class="text-lg text-gray-700 dark:text-gray-300">No tasks have been added to this project yet.</p>
-                        <a [routerLink]="['/tasks/new']" [queryParams]="{ projectId: project()!.id }" class="mt-4 inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md">Add a Task</a>
-                    </div>
-                }
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white">Tasks in this Project ({{ projectTasks().length }})</h3>
+                <a [routerLink]="['/tasks/new']" [queryParams]="{ projectId: project()!.id }" class="inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md">Add Task to Project</a>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  @for (task of projectTasks(); track task.id) {
+                      <app-task-card [task]="task" />
+                  }
+                  @empty {
+                      <div class="col-span-full text-center p-12 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                          <p class="text-lg text-gray-700 dark:text-gray-300">No tasks have been added to this project yet.</p>
+                          <a [routerLink]="['/tasks/new']" [queryParams]="{ projectId: project()!.id }" class="mt-4 inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md">Add a Task</a>
+                      </div>
+                  }
+              </div>
             </div>
           </div>
         </div>
