@@ -5,6 +5,7 @@ import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment
 
 // In a real app, this would be an environment variable
 const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
+// const API_URL = 'http://localhost:3000/api'; // Using relative URL for proxying
 
 @Injectable({
   providedIn: 'root'

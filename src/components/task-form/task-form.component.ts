@@ -6,6 +6,9 @@ import {
   effect,
   computed,
   signal,
+  viewChild,
+  ElementRef,
+  OnDestroy,
 } from "@angular/core";
 import {
   FormBuilder,
@@ -34,6 +37,7 @@ import { NotificationService } from "../../services/notification.service";
 import { UserService } from "../../services/user.service";
 import { UuidService } from "../../services/uuid.service";
 import { ProjectService } from "../../services/project.service";
+import flatpickr from 'flatpickr';
 
 @Component({
   selector: "app-task-form",
@@ -186,9 +190,11 @@ import { ProjectService } from "../../services/project.service";
         >Start Date <span class="text-red-500">*</span></label
       >
       <input
+        #startDateInput
         id="start_date"
-        type="date"
+        type="text"
         formControlName="start_date"
+        placeholder="Select start date"
         class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors"
         [class.border-red-500]="
           taskForm.get('start_date')?.invalid &&
@@ -208,9 +214,11 @@ import { ProjectService } from "../../services/project.service";
         >Due Date <span class="text-red-500">*</span></label
       >
       <input
+        #dueDateInput
         id="due_date"
-        type="date"
+        type="text"
         formControlName="due_date"
+        placeholder="Select due date"
         class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors"
         [class.border-red-500]="
           taskForm.get('due_date')?.invalid &&
@@ -369,7 +377,7 @@ import { ProjectService } from "../../services/project.service";
   `,
   styles: [],
 })
-export class TaskFormComponent {
+export class TaskFormComponent implements OnDestroy {
   taskToEditInput = input<Task | undefined>();
   taskSaved = output<Task>();
 
@@ -420,6 +428,12 @@ export class TaskFormComponent {
   repeatOptions: RepeatOption[] = ["None", "Daily", "Weekly", "Monthly"];
 
   isEditMode = false;
+
+  // For Flatpickr
+  startDateInput = viewChild<ElementRef<HTMLInputElement>>('startDateInput');
+  dueDateInput = viewChild<ElementRef<HTMLInputElement>>('dueDateInput');
+  private fpStartDate: any;
+  private fpDueDate: any;
 
   constructor() {
     this.route.paramMap.subscribe((params) => {
@@ -486,10 +500,57 @@ export class TaskFormComponent {
       }
     });
 
+    // Effect for initializing flatpickr on start date input
+    effect(() => {
+        const el = this.startDateInput();
+        if (el) {
+            this.fpStartDate = flatpickr(el.nativeElement, {
+                dateFormat: 'Y-m-d',
+                onChange: ([date]) => {
+                    if (date) this.taskForm.get('start_date')?.setValue(this.formatDate(date));
+                }
+            });
+            const task = this.taskToEdit();
+            if(task?.start_date) this.fpStartDate.setDate(task.start_date, false);
+        }
+    });
+
+    // Effect for initializing flatpickr on due date input
+    effect(() => {
+        const el = this.dueDateInput();
+        if (el) {
+            this.fpDueDate = flatpickr(el.nativeElement, {
+                dateFormat: 'Y-m-d',
+                onChange: ([date]) => {
+                    if (date) this.taskForm.get('due_date')?.setValue(this.formatDate(date));
+                }
+            });
+             const task = this.taskToEdit();
+            if(task?.due_date) this.fpDueDate.setDate(task.due_date, false);
+        }
+    });
+
     if (!this.currentUser()) {
       this.notificationService.showToast("You must be logged in.", "error");
       this.router.navigate(["/auth"]);
     }
+  }
+  
+  ngOnDestroy(): void {
+    this.fpStartDate?.destroy();
+    this.fpDueDate?.destroy();
+  }
+  
+  private formatDate(date: Date): string {
+    const d = new Date(date);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    const year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, month, day].join('-');
   }
 
   get subtasks() {

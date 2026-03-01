@@ -1,3 +1,4 @@
+
 const express = require('express');
 const Busboy = require('busboy');
 const path = require('path');
@@ -38,9 +39,19 @@ router.post('/', authMiddleware.verifyToken, (req, res) => {
     
     const { filename, mimeType } = info;
 
-    const allowedMimeTypes = /jpeg|jpg|png|gif|webp/;
-    if (!allowedMimeTypes.test(mimeType)) {
-      uploadError = `Invalid file type: ${mimeType}. Only images are allowed.`;
+    const allowedMimeTypes = [
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+        'application/pdf',
+        'application/msword', // .doc
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+        'application/vnd.ms-excel', // .xls
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'text/plain', // .txt
+        'text/csv'    // .csv
+    ];
+
+    if (!allowedMimeTypes.includes(mimeType)) {
+      uploadError = `Invalid file type: ${mimeType}. Allowed types: images, PDF, Word, Excel, TXT, CSV.`;
       file.resume();
       return;
     }

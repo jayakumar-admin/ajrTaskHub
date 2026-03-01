@@ -294,8 +294,15 @@ import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
     @if (attachments().length > 0) {
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         @for (attachment of attachments(); track attachment.id) {
-          <div class="bg-white dark:bg-gray-700/50 rounded-lg shadow-sm overflow-hidden flex flex-col group transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-            <div class="h-28 w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 relative">
+          <div class="relative bg-white dark:bg-gray-700/50 rounded-lg shadow-sm overflow-hidden flex flex-col group transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+             <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p class="font-bold truncate" [title]="attachment.fileName">{{ attachment.fileName }}</p>
+                <p>By: {{ attachment.uploaded_by_username }}</p>
+                <p>On: {{ attachment.uploadedAt | date:'short' }}</p>
+                <p>Type: {{ getFileTypeFrom(attachment.fileName) }}</p>
+                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-900 rotate-45"></div>
+              </div>
+            <div class="h-28 w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
               @if (getIconForFileType(attachment.fileName) === 'image') {
                 <img [src]="attachment.file_url" [alt]="attachment.fileName" class="h-full w-full object-cover">
               } @else {
@@ -538,6 +545,10 @@ export class TaskDetailComponent {
     this.currentPreviewFileName.set(null);
   }
 
+  getFileTypeFrom(fileName: string): string {
+    return fileName.split('.').pop()?.toUpperCase() || 'File';
+  }
+  
   getIconForFileType(fileName: string): string { return this._getPreviewType(fileName); }
   getTabClass(tabName: 'subtasks' | 'comments' | 'attachments' | 'history'): string { return this.activeTab() === tabName ? 'border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-300' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'; }
   getTabBadgeClass(tabName: 'subtasks' | 'comments' | 'attachments' | 'history'): string { return this.activeTab() === tabName ? 'bg-primary-100 text-primary-600 dark:bg-primary-800 dark:text-primary-200 ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium' : 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-200 ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium'; }

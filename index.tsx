@@ -18,7 +18,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideNoopAnimations(),
     provideZonelessChangeDetection(),
-    provideRouter(routes, withHashLocation()),
+    provideRouter(routes),
     provideHttpClient(
       withInterceptors([authInterceptor])
     ),
