@@ -4,13 +4,16 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PermissionService } from '../../services/permission.service';
 
+import { LayoutService } from '../../services/layout.service';
+
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
 <!-- Desktop Sidebar: hidden on mobile, flex on desktop -->
-<div class="hidden md:flex md:flex-col md:w-64 md:h-full md:fixed md:bg-white md:dark:bg-gray-800 md:border-r md:border-gray-200 md:dark:border-gray-700 md:z-30 p-4 space-y-6">
+<div class="hidden md:flex md:flex-col md:w-64 md:h-full md:fixed md:bg-white md:dark:bg-gray-800 md:border-r md:border-gray-200 md:dark:border-gray-700 md:z-30 p-4 space-y-6 transition-transform duration-300 ease-in-out"
+     [ngClass]="{'translate-x-0': layoutService.isDesktopSidebarOpen(), '-translate-x-full': !layoutService.isDesktopSidebarOpen()}">
   
   <!-- Logo/Title -->
   <div class="flex items-center gap-2 p-2">
@@ -189,6 +192,7 @@ import { PermissionService } from '../../services/permission.service';
 export class NavbarComponent {
   authService = inject(AuthService);
   permissionService = inject(PermissionService);
+  layoutService = inject(LayoutService);
   isAdmin = computed(() => this.authService.isAdmin());
   isMobileMenuOpen = signal(false);
 

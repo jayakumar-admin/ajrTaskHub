@@ -13,6 +13,8 @@ import { ThemeService } from '../../services/theme.service';
 import { SkeletonLoaderComponent } from '../skeleton-loader/skeleton-loader.component';
 import { SearchService } from '../../services/search.service';
 
+import { ProjectService } from '../../services/project.service';
+
 @Component({
   selector: 'app-task-list',
   standalone: true,
@@ -134,7 +136,7 @@ import { SearchService } from '../../services/search.service';
         @if(myTasks().length > 0) {
           <div class="flex overflow-x-auto space-x-6 pb-4 -mx-4 px-4">
             @for (task of myTasks(); track task.id; let i = $index) {
-              <div class="flex-shrink-0 w-80 animate-fade-in" [style.animation-delay]="$index * 100 + 'ms'">
+              <div class="flex-shrink-0 w-80 animate-fade-in" [style.animation-delay]="i * 100 + 'ms'">
                 <app-task-card [task]="task" />
               </div>
             }
@@ -157,7 +159,7 @@ import { SearchService } from '../../services/search.service';
           @if(todaysTasks().length > 0) {
             <div class="space-y-4">
               @for (task of todaysTasks(); track task.id; let i = $index) {
-                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer animate-fade-in" [style.animation-delay]="$index * 100 + 'ms'">
+                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer animate-fade-in" [style.animation-delay]="i * 100 + 'ms'">
                   <div class="flex-shrink-0">
                     <div class="h-12 w-12 rounded-full flex items-center justify-center border-2 text-gray-400 dark:text-gray-500" [class]="getPriorityBorder(task.priority)">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
@@ -190,7 +192,7 @@ import { SearchService } from '../../services/search.service';
           @if(upcomingTasks().length > 0) {
             <div class="space-y-4">
               @for (task of upcomingTasks(); track task.id; let i = $index) {
-                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer animate-fade-in" [style.animation-delay]="$index * 100 + 'ms'">
+                <div [routerLink]="['/tasks', task.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex items-center space-x-4 cursor-pointer animate-fade-in" [style.animation-delay]="i * 100 + 'ms'">
                   <div class="flex-shrink-0">
                     <div class="h-12 w-12 rounded-full flex items-center justify-center border-2 text-gray-400 dark:text-gray-500" [class]="getPriorityBorder(task.priority)">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -263,6 +265,16 @@ import { SearchService } from '../../services/search.service';
                     }
                 </select>
             </div>
+            <!-- Project Filter -->
+            <div class="flex-1 min-w-[150px]">
+                <label for="filter-project" class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Project</label>
+                <select id="filter-project" [ngModel]="selectedProject()" (ngModelChange)="selectedProject.set($event)" class="w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors">
+                    <option value="all">All Projects</option>
+                    @for (project of projects(); track project.id) {
+                        <option [value]="project.id">{{ project.name }}</option>
+                    }
+                </select>
+            </div>
             <!-- Reset Button -->
             <div class="flex-shrink-0">
                 <button (click)="resetFilters()" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
@@ -273,7 +285,7 @@ import { SearchService } from '../../services/search.service';
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @for (task of filteredTasks(); track task.id; let i = $index) {
-                <div class="animate-fade-in" [style.animation-delay]="$index * 50 + 'ms'">
+                <div class="animate-fade-in" [style.animation-delay]="i * 50 + 'ms'">
                   <app-task-card [task]="task" />
                 </div>
             }
@@ -313,12 +325,14 @@ export class TaskListComponent implements AfterViewInit {
   authService = inject(AuthService);
   supabaseService = inject(SupabaseService);
   searchService = inject(SearchService);
+  projectService = inject(ProjectService);
   route = inject(ActivatedRoute);
 
   currentUser = this.authService.currentUser;
   allTasks = this.taskService.tasks;
   loading = this.taskService.loading;
   users = this.taskService.users;
+  projects = this.projectService.projects;
 
   // Global search term from service
   globalSearchTerm = this.searchService.searchTerm;
@@ -328,6 +342,7 @@ export class TaskListComponent implements AfterViewInit {
   selectedPriority = signal<TaskPriority | 'all'>('all');
   selectedAssignee = signal<string | 'all'>('all');
   selectedType = signal<TaskType | 'all'>('all');
+  selectedProject = signal<string | 'all'>('all');
 
   // Filter options
   statuses: TaskStatus[] = ['todo', 'in-progress', 'review', 'completed'];
@@ -350,16 +365,25 @@ export class TaskListComponent implements AfterViewInit {
     const priority = this.selectedPriority();
     const assignee = this.selectedAssignee();
     const type = this.selectedType();
+    const project = this.selectedProject();
 
     return this.allTasks().filter(task => {
+      const formattedTicketId = this.formatTicketId(task.ticket_id);
+      const fullTicketId = `ajr-${formattedTicketId}`.toLowerCase();
+      
       const matchesText = text 
-        ? (task.title.toLowerCase().includes(text) || (task.description && task.description.toLowerCase().includes(text))) 
+        ? (task.title.toLowerCase().includes(text) || 
+           (task.description && task.description.toLowerCase().includes(text)) ||
+           formattedTicketId.includes(text) ||
+           fullTicketId.includes(text) ||
+           task.ticket_id.toString().includes(text))
         : true;
       const matchesStatus = status !== 'all' ? task.status === status : true;
       const matchesPriority = priority !== 'all' ? task.priority === priority : true;
       const matchesAssignee = assignee !== 'all' ? task.assign_to === assignee : true;
       const matchesType = type !== 'all' ? task.type === type : true;
-      return matchesText && matchesStatus && matchesPriority && matchesAssignee && matchesType;
+      const matchesProject = project !== 'all' ? task.project_id === project : true;
+      return matchesText && matchesStatus && matchesPriority && matchesAssignee && matchesType && matchesProject;
     });
   });
   
@@ -369,6 +393,7 @@ export class TaskListComponent implements AfterViewInit {
     this.selectedPriority.set('all');
     this.selectedAssignee.set('all');
     this.selectedType.set('all');
+    this.selectedProject.set('all');
   }
 
   private scrollTo(elementId: string): void {

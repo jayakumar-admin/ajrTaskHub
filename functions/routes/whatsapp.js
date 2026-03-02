@@ -4,5 +4,6 @@ const authMiddleware = require('../middleware/auth');
 const whatsappController = require('../controllers/whatsapp.controller');
 
 router.post('/send', authMiddleware.verifyToken, whatsappController.sendMessage);
+router.post('/send-template', authMiddleware.verifyToken, whatsappController.sendTemplateMessage);
 
 module.exports = router;

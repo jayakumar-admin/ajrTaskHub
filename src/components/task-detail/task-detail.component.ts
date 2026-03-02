@@ -12,11 +12,12 @@ import { SkeletonLoaderComponent } from '../skeleton-loader/skeleton-loader.comp
 import { PermissionService } from '../../services/permission.service';
 import { ProjectService } from '../../services/project.service';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+import { ImageUploadDirective } from '../../directives/image-upload.directive';
 
 @Component({
   selector: 'app-task-detail',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, RouterLink, HistoryTimelineComponent, SkeletonLoaderComponent, NgxExtendedPdfViewerModule],
+  imports: [CommonModule, DatePipe, FormsModule, RouterLink, HistoryTimelineComponent, SkeletonLoaderComponent, NgxExtendedPdfViewerModule, ImageUploadDirective],
   template: `
 <div class="container mx-auto p-4 my-8 animate-fade-in">
   @if (loading()) {
@@ -202,15 +203,13 @@ import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
         } @else if (currentPreviewType() === 'audio') {
           <audio [src]="currentPreviewUrl()" controls class="w-full max-w-md"></audio>
         } @else if (currentPreviewType() === 'pdf') {
-          <ngx-extended-pdf-viewer [src]="currentPreviewUrl()" 
-                                   [useBrowserLocale]="true"
+          <ngx-extended-pdf-viewer [src]="getPdfSrc()" 
                                    height="100%"
                                    width="100%"
                                    [showHandToolButton]="true"
                                    [showOpenFileButton]="false"
                                    [showPrintButton]="true"
                                    [showDownloadButton]="true"
-                                   [showBookmarkButton]="false"
                                    [showPagingButtons]="true"
                                    [showPresentationModeButton]="true"
                                    [showSidebarButton]="false"
@@ -284,11 +283,30 @@ import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
   <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md">
     <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Attachments</h3>
     @if (canAddAttachments()) {
-      <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
-        <input type="file" (change)="onFileSelected($event)" id="file-upload" class="form-file-input" [disabled]="isUploadingFile()">
-        <button (click)="uploadAttachment()" [disabled]="!selectedFile || isUploadingFile()" class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-          @if(isUploadingFile()){ Uploading... } @else { Upload }
-        </button>
+      <div class="mb-6">
+        <div class="w-full" appImageUpload (fileDropped)="onFileDropped($event)">
+          <label for="file-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors group">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400 group-hover:text-primary-500 transition-colors" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.017 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                  </svg>
+                  <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span>, drag and drop, or paste</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Any file type</p>
+              </div>
+              <input id="file-upload" type="file" class="hidden" (change)="onFileSelected($event)" [disabled]="isUploadingFile()" />
+          </label>
+        </div>
+        @if (selectedFile) {
+          <div class="mt-2 flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
+            <span class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ selectedFile.name }}</span>
+            <div class="flex space-x-2">
+               <button (click)="uploadAttachment()" [disabled]="isUploadingFile()" class="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-md disabled:opacity-50 transition-colors">
+                @if(isUploadingFile()){ Uploading... } @else { Upload }
+              </button>
+              <button (click)="selectedFile = null" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md transition-colors">Cancel</button>
+            </div>
+          </div>
+        }
       </div>
     }
     @if (attachments().length > 0) {
@@ -468,6 +486,10 @@ export class TaskDetailComponent {
     }
   }
 
+  onFileDropped(file: File): void {
+    this.selectedFile = file;
+  }
+
   async uploadAttachment(): Promise<void> {
     const taskId = this.taskId();
     if (!taskId || !this.selectedFile) return;
@@ -547,6 +569,11 @@ export class TaskDetailComponent {
 
   getFileTypeFrom(fileName: string): string {
     return fileName.split('.').pop()?.toUpperCase() || 'File';
+  }
+
+  getPdfSrc(): string {
+    const url = this.currentPreviewUrl();
+    return typeof url === 'string' ? url : '';
   }
   
   getIconForFileType(fileName: string): string { return this._getPreviewType(fileName); }

@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom, map } from 'rxjs';
-import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment, HistoryEntry, UserSettings, Notification, Conversation, ChatMessage, ChatMessageReaction, CronJob, WhatsAppLog } from '../shared/interfaces';
+import { User, Task, Project, SystemConfig, RolePermissions, Comment, Attachment, HistoryEntry, UserSettings, Notification, Conversation, ChatMessage, ChatMessageReaction, CronJob, WhatsAppLog, PersonalTodo } from '../shared/interfaces';
 
 // In a real app, this would be an environment variable
-const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
-// const API_URL = 'http://localhost:3000/api'; // Using relative URL for proxying
+// const API_URL = 'https://api-g7tx7czgqq-uc.a.run.app/api'; // Using relative URL for proxying
+const API_URL = 'http://localhost:3000/api';
 
 @Injectable({
   providedIn: 'root'
@@ -94,9 +94,21 @@ export class ApiService {
     return firstValueFrom(this.http.get<User>(`${API_URL}/auth/me`));
   }
 
+  changePassword(data: any): Promise<any> {
+    return firstValueFrom(this.http.post(`${API_URL}/auth/change-password`, data));
+  }
+
   // --- Tasks ---
-  fetchTasks(): Promise<Task[]> {
-    return firstValueFrom(this.http.get<any[]>(`${API_URL}/tasks`).pipe(
+  fetchTasks(filters?: any): Promise<Task[]> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+          params = params.append(key, filters[key]);
+        }
+      });
+    }
+    return firstValueFrom(this.http.get<any[]>(`${API_URL}/tasks`, { params }).pipe(
       map(tasks => tasks.map(t => this.mapTask(t)))
     ));
   }
@@ -280,5 +292,26 @@ export class ApiService {
   // --- WhatsApp ---
   sendWhatsAppMessage(phoneNumber: string, message: string): Promise<any> {
     return firstValueFrom(this.http.post<any>(`${API_URL}/whatsapp/send`, { phoneNumber, message }));
+  }
+
+  sendWhatsAppTemplate(userId: string, templateName: string, parameters: any[]): Promise<any> {
+    return firstValueFrom(this.http.post<any>(`${API_URL}/whatsapp/send-template`, { userId, templateName, parameters }));
+  }
+
+  // --- Personal Todos ---
+  fetchTodos(): Promise<PersonalTodo[]> {
+    return firstValueFrom(this.http.get<PersonalTodo[]>(`${API_URL}/todos`));
+  }
+
+  addTodo(text: string): Promise<PersonalTodo> {
+    return firstValueFrom(this.http.post<PersonalTodo>(`${API_URL}/todos`, { text }));
+  }
+
+  updateTodo(id: string, is_completed: boolean): Promise<PersonalTodo> {
+    return firstValueFrom(this.http.put<PersonalTodo>(`${API_URL}/todos/${id}`, { is_completed }));
+  }
+
+  deleteTodo(id: string): Promise<void> {
+    return firstValueFrom(this.http.delete<void>(`${API_URL}/todos/${id}`));
   }
 }

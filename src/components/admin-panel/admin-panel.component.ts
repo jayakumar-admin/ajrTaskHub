@@ -284,34 +284,57 @@ import { CronService } from '../../services/cron.service';
         </div>
 
         <div class="col-span-full">
-          <label for="waTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status Update Template</label>
-          <textarea id="waTemplate" [(ngModel)]="whatsAppConfig.whatsapp_status_template" name="wa_template" rows="4"
+          <label for="waTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status Update Template Name</label>
+          <input type="text" id="waTemplate" [(ngModel)]="whatsAppConfig.whatsapp_status_template" name="wa_template"
                     class="form-input"
-                    [placeholder]="exampleWhatsAppTemplate"></textarea>
+                    placeholder="task_status_update" />
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-wrap gap-x-2">
-            <span>Placeholders:</span>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskTitle}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{newStatus}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskDescription}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskDueDate}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskPriority}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskLink}}' }}</code>
+            <span>Parameters:</span>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{1}}' }} User Name</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{2}}' }} Task Title</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{3}}' }} Ticket ID</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{4}}' }} Project</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{5}}' }} Due Date</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{6}}' }} Assigned To</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{7}}' }} Status</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{8}}' }} Remarks</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{9}}' }} Task Link</code>
           </p>
         </div>
         
         <div class="col-span-full">
-          <label for="waAssignmentTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Assignment Template</label>
-          <textarea id="waAssignmentTemplate" [(ngModel)]="whatsAppConfig.whatsapp_assignment_template" name="wa_assignment_template" rows="4"
+          <label for="waAssignmentTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Assignment Template Name</label>
+          <input type="text" id="waAssignmentTemplate" [(ngModel)]="whatsAppConfig.whatsapp_assignment_template" name="wa_assignment_template"
                     class="form-input"
-                    [placeholder]="exampleAssignmentTemplate"></textarea>
+                    placeholder="task_assigned_new" />
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-wrap gap-x-2">
-             <span>Placeholders:</span>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskTitle}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{assignedBy}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskDescription}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskDueDate}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskPriority}}' }}</code>
-            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{taskLink}}' }}</code>
+             <span>Parameters:</span>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{1}}' }} User Name</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{2}}' }} Task Title</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{3}}' }} Ticket ID</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{4}}' }} Project</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{5}}' }} Due Date</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{6}}' }} Priority</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{7}}' }} Description</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{8}}' }} Task Link</code>
+          </p>
+        </div>
+
+        <div class="col-span-full">
+          <label for="waReminderTemplate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Reminder Template Name</label>
+          <input type="text" id="waReminderTemplate" [(ngModel)]="whatsAppConfig.whatsapp_reminder_template" name="wa_reminder_template"
+                    class="form-input"
+                    placeholder="task_reminder" />
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-wrap gap-x-2">
+             <span>Parameters:</span>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{1}}' }} User Name</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{2}}' }} Task Title</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{3}}' }} Ticket ID</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{4}}' }} Project</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{5}}' }} Due Date</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{6}}' }} Priority</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{7}}' }} Status</code>
+            <code class="bg-gray-200 dark:bg-gray-600 px-1 rounded">{{ '{{8}}' }} Task Link</code>
           </p>
         </div>
 
@@ -370,7 +393,8 @@ export class AdminPanelComponent {
     whatsapp_phone_number_id: '',
     whatsapp_graph_url: '',
     whatsapp_status_template: '',
-    whatsapp_assignment_template: ''
+    whatsapp_assignment_template: '',
+    whatsapp_reminder_template: ''
   };
 
   constructor() {

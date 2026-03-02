@@ -49,20 +49,22 @@ const saveWhatsAppConfig = async (config) => {
         whatsapp_phone_number_id, 
         whatsapp_graph_url, 
         whatsapp_status_template,
-        whatsapp_assignment_template
+        whatsapp_assignment_template,
+        whatsapp_reminder_template
     } = config;
 
     await db.query(
-        `INSERT INTO system_config (id, whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template, whatsapp_assignment_template)
-         VALUES (1, $1, $2, $3, $4, $5, $6)
+        `INSERT INTO system_config (id, whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template, whatsapp_assignment_template, whatsapp_reminder_template)
+         VALUES (1, $1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO UPDATE SET
             whatsapp_integration_enabled = $1,
             whatsapp_access_token = $2,
             whatsapp_phone_number_id = $3,
             whatsapp_graph_url = $4,
             whatsapp_status_template = $5,
-            whatsapp_assignment_template = $6`,
-        [whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template, whatsapp_assignment_template]
+            whatsapp_assignment_template = $6,
+            whatsapp_reminder_template = $7`,
+        [whatsapp_integration_enabled, whatsapp_access_token, whatsapp_phone_number_id, whatsapp_graph_url, whatsapp_status_template, whatsapp_assignment_template, whatsapp_reminder_template]
     );
 };
 

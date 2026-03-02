@@ -38,7 +38,7 @@ export class ChatService {
       } else {
         this.resetState();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   toggleChat(): void {

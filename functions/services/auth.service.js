@@ -46,8 +46,26 @@ const getProfile = async (userId) => {
     return user;
 };
 
+const changePassword = async (userId, currentPassword, newPassword) => {
+    const user = await authQueries.findUserByIdWithPassword(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+        throw new Error('Invalid current password');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await authQueries.updatePassword(userId, passwordHash);
+};
+
 module.exports = {
     register,
     login,
     getProfile,
+    changePassword,
 };

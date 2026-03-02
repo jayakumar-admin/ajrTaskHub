@@ -2,7 +2,18 @@ const taskService = require('../services/task.service');
 
 const getAllTasks = async (req, res) => {
     try {
-        const tasks = await taskService.getAllTasks();
+        const filters = {
+            status: req.query.status,
+            priority: req.query.priority,
+            assign_to: req.query.assign_to,
+            project_id: req.query.project_id,
+            due_date_start: req.query.due_date_start,
+            due_date_end: req.query.due_date_end
+        };
+        // Remove undefined keys
+        Object.keys(filters).forEach(key => filters[key] === undefined && delete filters[key]);
+        
+        const tasks = await taskService.getAllTasks(filters);
         res.json(tasks);
     } catch (error) {
         res.status(500).json({ error: error.message });

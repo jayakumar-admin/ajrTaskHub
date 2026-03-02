@@ -139,7 +139,7 @@ export class ChatComponent {
       // Auto-scroll when new messages are added
       this.messages(); // Depend on messages signal
       this.scrollToBottom();
-    });
+    }, { allowSignalWrites: true });
   }
 
   private formatDateSeparator(date: Date): string {

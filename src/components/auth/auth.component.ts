@@ -10,8 +10,62 @@ import { User } from '../../shared/interfaces';
   selector: 'app-auth',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
+  styles: [`
+    @keyframes drawCheck {
+      0% { stroke-dashoffset: 20; }
+      40% { stroke-dashoffset: 0; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .animate-draw-check {
+      stroke-dasharray: 20;
+      animation: drawCheck 2s ease-out infinite;
+    }
+  `],
   template: `
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+  @if (isLoading()) {
+    <div class="absolute inset-0 z-50 flex items-center justify-center bg-gray-900/90 backdrop-blur-md transition-all duration-500">
+      <div class="flex flex-col items-center">
+        <!-- Tech/Task Animation -->
+        <div class="relative w-32 h-32">
+          <!-- Outer spinning tech rings -->
+          <svg class="absolute inset-0 w-full h-full text-primary-500 animate-[spin_4s_linear_infinite]" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="40 10 20 10 60 10" opacity="0.4" />
+            <circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="15 15 40 10" class="origin-center animate-[spin_3s_linear_infinite_reverse]" opacity="0.6" />
+            <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 5" class="origin-center animate-[spin_5s_linear_infinite]" opacity="0.3" />
+          </svg>
+          
+          <!-- Inner Task Clipboard with checkmark drawing -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" class="animate-pulse" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="text-primary-400 animate-draw-check" d="M9 14l2 2 4-4" />
+            </svg>
+          </div>
+        </div>
+        
+        <!-- Loading Text -->
+        <div class="mt-8 text-center">
+          <h3 class="text-xl font-bold text-white tracking-widest animate-pulse">
+            {{ isLoginMode() ? 'AUTHENTICATING' : 'INITIALIZING WORKSPACE' }}
+          </h3>
+          <div class="text-primary-400 text-sm mt-3 flex items-center justify-center space-x-2 font-mono">
+            <span>[</span>
+            <span class="flex space-x-1">
+              <span class="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0s"></span>
+              <span class="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+              <span class="w-1.5 h-1.5 bg-primary-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+            </span>
+            <span>]</span>
+          </div>
+          <p class="text-gray-400 text-xs mt-4 font-mono uppercase tracking-widest opacity-70">
+            Syncing Task Protocols...
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <div class="flex justify-center items-center">
       <svg class="h-12 w-auto text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
@@ -186,7 +240,7 @@ export class AuthComponent implements OnInit {
       if (this.authService.isLoggedIn()) {
         this.router.navigate(['/tasks']);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngOnInit(): void {

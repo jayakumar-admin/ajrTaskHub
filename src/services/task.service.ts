@@ -9,6 +9,7 @@ import { UuidService } from './uuid.service';
 import { UserService } from './user.service';
 import { ProjectService } from './project.service';
 import { StatusAnimationService } from './status-animation.service';
+import { WhatsAppService } from './whatsapp.service';
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +28,7 @@ export class TaskService {
   private userService = inject(UserService);
   private projectService = inject(ProjectService);
   private statusAnimationService = inject(StatusAnimationService);
+  private whatsAppService = inject(WhatsAppService);
 
   public users = this.userService.users;
 
@@ -58,7 +60,7 @@ export class TaskService {
       } else {
         this.resetState();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   public resetState(): void {
@@ -152,6 +154,20 @@ export class TaskService {
       const hydratedTask = this.hydrateTask(addedTask);
       this._allTasks.update(tasks => [...tasks, hydratedTask]);
       this.notificationService.showToast(`Task "${addedTask.title}" created!`, 'success');
+      
+      // WhatsApp Notification
+      const assigner = this.authService.currentUser()?.profile.username || 'System';
+      const assigneeName = this.userService.users().find(u => u.id === addedTask.assign_to)?.username || 'User';
+      const projectName = this.projectService.projects().find(p => p.id === addedTask.project_id)?.name || '';
+      
+      this.whatsAppService.sendTaskAssignment(
+        addedTask.assign_to, 
+        assigneeName,
+        addedTask,
+        projectName,
+        assigner
+      );
+
       return hydratedTask;
     } catch (error) {
       this.handleError(error, 'Failed to create task.');
@@ -167,8 +183,52 @@ export class TaskService {
       this._allTasks.update(tasks => tasks.map(t => t.id === modifiedTask.id ? hydratedTask : t));
       this.notificationService.showToast(`Task "${modifiedTask.title}" updated!`, 'success');
 
-      if (originalTask && originalTask.status !== modifiedTask.status) {
-        this.statusAnimationService.show(`Status changed to ${modifiedTask.status.replace('-', ' ')}`);
+      if (originalTask) {
+        const projectName = this.projectService.projects().find(p => p.id === modifiedTask.project_id)?.name || '';
+        
+        // Status Change
+        if (originalTask.status !== modifiedTask.status) {
+          this.statusAnimationService.show(`Status changed to ${modifiedTask.status.replace('-', ' ')}`);
+          
+          // Notify Assignee
+          const assigneeName = this.userService.users().find(u => u.id === modifiedTask.assign_to)?.username || 'User';
+          this.whatsAppService.sendStatusUpdate(
+             modifiedTask.assign_to,
+             assigneeName,
+             modifiedTask,
+             projectName,
+             `Status changed to ${modifiedTask.status}`
+          );
+
+          // Notify Tagged Users
+          if (modifiedTask.tagged_users && modifiedTask.tagged_users.length > 0) {
+             modifiedTask.tagged_users.forEach(userId => {
+                if (userId !== modifiedTask.assign_to) {
+                   const taggedUserName = this.userService.users().find(u => u.id === userId)?.username || 'User';
+                   this.whatsAppService.sendStatusUpdate(
+                     userId,
+                     taggedUserName,
+                     modifiedTask,
+                     projectName,
+                     `Status changed to ${modifiedTask.status}`
+                   );
+                }
+             });
+          }
+        }
+        
+        // Reassignment
+        if (originalTask.assign_to !== modifiedTask.assign_to) {
+           const assigner = this.authService.currentUser()?.profile.username || 'System';
+           const assigneeName = this.userService.users().find(u => u.id === modifiedTask.assign_to)?.username || 'User';
+           this.whatsAppService.sendTaskAssignment(
+             modifiedTask.assign_to,
+             assigneeName,
+             modifiedTask,
+             projectName,
+             assigner
+           );
+        }
       }
       return hydratedTask;
     } catch (error) {
@@ -299,7 +359,7 @@ export class TaskService {
   public canDeleteTask(task: Task): boolean {
     const profile = this.authService.currentUser()?.profile;
     if (!profile) return false;
-    return profile.role === 'Admin' || task.assigned_by === profile.id;
+    return profile.role === 'Admin';
   }
 
   public canApproveReject(task: Task): boolean {

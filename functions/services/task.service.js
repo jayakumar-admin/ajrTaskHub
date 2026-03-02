@@ -2,6 +2,7 @@
 
 const taskQueries = require('../queries/task.queries');
 const userQueries = require('../queries/user.queries');
+const projectQueries = require('../queries/project.queries');
 const whatsappService = require('./whatsapp.service');
 
 const _hydrateTasksWithUsernames = async (tasks) => {
@@ -18,28 +19,39 @@ const _hydrateTasksWithUsernames = async (tasks) => {
     return Array.isArray(tasks) ? tasks.map(hydrate) : hydrate(tasks);
 };
 
+const _getProjectName = async (projectId) => {
+    if (!projectId) return 'N/A';
+    const project = await projectQueries.findProjectById(projectId);
+    return project ? project.name : 'N/A';
+};
+
 const _sendAssignmentNotification = async (task) => {
     try {
         const assigneeId = task.assign_to;
-        if (!assigneeId) {
-            console.log(`Task ${task.id} has no assignee. Skipping assignment notification.`);
-            return;
-        }
+        if (!assigneeId) return;
 
-        console.log(`Attempting to send assignment notification for task ${task.id} to assignee ${assigneeId}.`);
-        const assigneeSettings = await userQueries.findUserSettingsById(assigneeId);
+        const assignee = await userQueries.findUserById(assigneeId);
+        if (!assignee) return;
 
-        if (assigneeSettings?.whatsapp_notifications_enabled && assigneeSettings.whatsapp_number) {
-            const assignedByUser = await userQueries.findUserById(task.assigned_by);
-            console.log(`Sending WhatsApp assignment notification to ${assigneeSettings.whatsapp_number}.`);
-            await whatsappService.sendTaskAssignmentNotification(
-                assigneeSettings.whatsapp_number,
-                task,
-                assignedByUser.username
-            );
-        } else {
-             console.log(`Assignee ${assigneeId} has no valid WhatsApp number or has disabled notifications. Skipping.`);
-        }
+        const assignedByUser = await userQueries.findUserById(task.assigned_by);
+        const projectName = await _getProjectName(task.project_id);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://your-app-domain.com';
+        const taskLink = `${frontendUrl}/tasks/${task.id}`;
+
+        // Template: task_assigned_new
+        // Params: {{1}} User Name, {{2}} Task Title, {{3}} Ticket ID, {{4}} Project, {{5}} Due Date, {{6}} Priority, {{7}} Description, {{8}} Task Link
+        const params = [
+            assignee.username,
+            task.title,
+            task.ticket_id.toString().padStart(4, '0'),
+            projectName,
+            new Date(task.due_date).toDateString(),
+            task.priority,
+            task.description || 'No description',
+            taskLink
+        ];
+
+        await whatsappService.sendTemplateMessage(assigneeId, 'task_assigned_new', params);
     } catch (e) {
         console.error('Failed to send task assignment notification:', e.message);
     }
@@ -48,30 +60,37 @@ const _sendAssignmentNotification = async (task) => {
 const _sendStatusChangeNotification = async (task) => {
     try {
         const assigneeId = task.assign_to;
-        if (!assigneeId) {
-            console.log(`Task ${task.id} has no assignee. Skipping status change notification.`);
-            return;
-        }
+        if (!assigneeId) return;
 
-        console.log(`Attempting to send status change notification for task ${task.id} to assignee ${assigneeId}.`);
-        const assigneeSettings = await userQueries.findUserSettingsById(assigneeId);
-        
-        if (assigneeSettings?.whatsapp_notifications_enabled && assigneeSettings.whatsapp_number) {
-            console.log(`Sending WhatsApp status change notification to ${assigneeSettings.whatsapp_number}.`);
-            await whatsappService.sendStatusUpdate(
-                assigneeSettings.whatsapp_number,
-                task
-            );
-        } else {
-            console.log(`Assignee ${assigneeId} has no valid WhatsApp number or has disabled notifications for status changes. Skipping.`);
-        }
+        const assignee = await userQueries.findUserById(assigneeId);
+        if (!assignee) return;
+
+        const projectName = await _getProjectName(task.project_id);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://your-app-domain.com';
+        const taskLink = `${frontendUrl}/tasks/${task.id}`;
+
+        // Template: task_status_update
+        // Params: {{1}} User Name, {{2}} Task Title, {{3}} Ticket ID, {{4}} Project, {{5}} Due Date, {{6}} Assigned To, {{7}} Status, {{8}} Remarks, {{9}} Task Link
+        const params = [
+            assignee.username,
+            task.title,
+            task.ticket_id.toString().padStart(4, '0'),
+            projectName,
+            new Date(task.due_date).toDateString(),
+            task.assigned_to_username || assignee.username, // Fallback if hydrated
+            task.status,
+            'Status updated', // Default remarks
+            taskLink
+        ];
+
+        await whatsappService.sendTemplateMessage(assigneeId, 'task_status_update', params);
     } catch (e) {
         console.error('Failed to send task status change notification:', e.message);
     }
 };
 
-const getAllTasks = async () => {
-    const tasks = await taskQueries.getAllTasks();
+const getAllTasks = async (filters) => {
+    const tasks = await taskQueries.getAllTasks(filters);
     return await _hydrateTasksWithUsernames(tasks);
 };
 

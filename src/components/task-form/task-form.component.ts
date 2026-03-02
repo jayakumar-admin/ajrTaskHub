@@ -143,7 +143,7 @@ import flatpickr from 'flatpickr';
         id="project_id"
         formControlName="project_id"
         class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors">
-        <option [value]="null">No Project</option>
+        <option [ngValue]="null">No Project</option>
         @for (project of projects(); track project.id) {
         <option [value]="project.id">{{ project.name }}</option>
         }
@@ -440,30 +440,24 @@ export class TaskFormComponent implements OnDestroy {
         this.taskId.set(params.get("id"));
     });
     
-    // This effect populates the tagged_users FormArray whenever the user list changes.
-    effect(() => {
-      const userList = this.users();
-      const taggedUsersArray = this.taskForm.get('tagged_users') as FormArray;
-      
-      while(taggedUsersArray.length !== 0) {
-        taggedUsersArray.removeAt(0);
-      }
-      userList.forEach(() => taggedUsersArray.push(this.fb.control(false)));
-    });
-
-    // This effect manages the form state: loading, editing, or creating.
+    // Combined effect for form initialization and population
     effect(() => {
       const task = this.taskToEdit();
       const id = this.taskId();
+      const userList = this.users();
       const isLoading = this.taskService.loading() || this.userService.loading() || this.projectService.loading();
 
       // If we have an ID, we're in edit mode (or preparing to be).
       if (id) {
         this.isEditMode = true;
-        // When the task data is available, patch the form.
-        if (task) {
+        // When the task data and users are available, patch the form.
+        if (task && userList.length > 0) {
+          // Exclude FormArrays from patchValue to avoid "value.forEach is not a function" 
+          // and "Cannot find control" errors. They are handled manually below.
+          const { subtasks, tagged_users, ...taskData } = task;
+          
           this.taskForm.patchValue({
-            ...task,
+            ...taskData,
             tags: task.tags?.join(", ") ?? '',
           });
           
@@ -472,33 +466,59 @@ export class TaskFormComponent implements OnDestroy {
             task.subtasks.forEach(sub => this.subtasks.push(this.fb.group({ ...sub })));
           }
 
-          const userList = this.users();
-          const taggedUsersBools = userList.map(u => task.tagged_users?.includes(u.id) ?? false);
-          this.taskForm.get('tagged_users')?.patchValue(taggedUsersBools, { emitEvent: false });
+          // Rebuild tagged_users FormArray with correct values
+          const taggedUsersArray = this.taskForm.get('tagged_users') as FormArray;
+          while(taggedUsersArray.length !== 0) {
+            taggedUsersArray.removeAt(0);
+          }
+          userList.forEach(user => {
+            const isTagged = task.tagged_users?.includes(user.id) ?? false;
+            taggedUsersArray.push(this.fb.control(isTagged));
+          });
         }
-        // If there's an ID but no task data yet, we just wait. The form remains blank but isn't reset.
       } 
       // If we have NO ID, and initial data loading is finished, it's safe to treat as a new task.
-      else if (!isLoading) {
+      else if (!isLoading && userList.length > 0) {
         this.isEditMode = false;
-        this.taskForm.reset({
-          title: '',
-          description: '',
-          type: "Task",
-          priority: "Medium",
-          duration: '',
-          tags: '',
-          start_date: new Date().toISOString().substring(0, 10),
-          due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10),
-          approval_required: false,
-          reminder_option: "None",
-          repeat_option: "None",
-          assign_to: this.currentUser()?.profile?.id || '',
-          project_id: this.route.snapshot.queryParamMap.get('projectId') || null
-        });
-        this.subtasks.clear();
+        // Only reset if form is pristine or we just switched modes? 
+        // For now, just ensure tagged_users is initialized.
+        
+        // Initialize tagged_users if empty or mismatched
+        const taggedUsersArray = this.taskForm.get('tagged_users') as FormArray;
+        if (taggedUsersArray.length !== userList.length) {
+            while(taggedUsersArray.length !== 0) {
+                taggedUsersArray.removeAt(0);
+            }
+            userList.forEach(() => taggedUsersArray.push(this.fb.control(false)));
+        }
+
+        // We might want to reset other fields only once when entering "new" mode.
+        // But since this effect runs on dependencies, we should be careful not to reset user input.
+        // A simple check: if title is empty and untouced, maybe reset?
+        // Or better: rely on the fact that navigating to /new creates a new component instance usually.
+        // But if reusing component, we need to be careful.
+        // For this fix, I'll assume component is re-created or reset explicitly.
+        // The previous code reset the form here. I'll keep it but guard it.
+        if (this.taskForm.pristine) {
+             this.taskForm.reset({
+              title: '',
+              description: '',
+              type: "Task",
+              priority: "Medium",
+              duration: '',
+              tags: '',
+              start_date: new Date().toISOString().substring(0, 10),
+              due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10),
+              approval_required: false,
+              reminder_option: "None",
+              repeat_option: "None",
+              assign_to: this.currentUser()?.profile?.id || '',
+              project_id: this.route.snapshot.queryParamMap.get('projectId') || null
+            });
+            this.subtasks.clear();
+        }
       }
-    });
+    }, { allowSignalWrites: true });
 
     // Effect for initializing flatpickr on start date input
     effect(() => {
@@ -513,7 +533,7 @@ export class TaskFormComponent implements OnDestroy {
             const task = this.taskToEdit();
             if(task?.start_date) this.fpStartDate.setDate(task.start_date, false);
         }
-    });
+    }, { allowSignalWrites: true });
 
     // Effect for initializing flatpickr on due date input
     effect(() => {
@@ -528,7 +548,7 @@ export class TaskFormComponent implements OnDestroy {
              const task = this.taskToEdit();
             if(task?.due_date) this.fpDueDate.setDate(task.due_date, false);
         }
-    });
+    }, { allowSignalWrites: true });
 
     if (!this.currentUser()) {
       this.notificationService.showToast("You must be logged in.", "error");

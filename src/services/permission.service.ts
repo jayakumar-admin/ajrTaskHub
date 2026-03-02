@@ -17,6 +17,7 @@ const DEFAULT_PERMISSIONS: Omit<RolePermissions, 'role'> = {
   can_add_attachments: false,
   can_preview_attachments: false,
   can_download_attachments: false,
+  can_use_ai_assistant: false,
 };
 
 @Injectable({
@@ -55,6 +56,7 @@ export class PermissionService {
   canAddAttachments = computed(() => this.currentUserPermissions().can_add_attachments);
   canPreviewAttachments = computed(() => this.currentUserPermissions().can_preview_attachments);
   canDownloadAttachments = computed(() => this.currentUserPermissions().can_download_attachments);
+  canUseAiAssistant = computed(() => this.currentUserPermissions().can_use_ai_assistant);
 
   constructor() {
     effect(() => {
@@ -65,7 +67,7 @@ export class PermissionService {
         this.allPermissions.set([]);
         this.currentUserPermissions.set(DEFAULT_PERMISSIONS);
       }
-    });
+    }, { allowSignalWrites: true });
     
     effect(() => {
       const user = this.authService.currentUser();
@@ -77,7 +79,7 @@ export class PermissionService {
       } else {
         this.currentUserPermissions.set(DEFAULT_PERMISSIONS);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   async loadAllPermissions() {

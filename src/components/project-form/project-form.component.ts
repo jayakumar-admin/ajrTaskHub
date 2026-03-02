@@ -8,11 +8,12 @@ import { AuthService } from '../../services/auth.service';
 import { Project } from '../../shared/interfaces';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
+import { ImageUploadDirective } from '../../directives/image-upload.directive';
 
 @Component({
   selector: 'app-project-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploadDirective],
   template: `
     <div class="container mx-auto p-4 max-w-2xl">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl my-8 p-6">
@@ -33,15 +34,23 @@ import { NotificationService } from '../../services/notification.service';
           </div>
            <div>
             <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Project Banner Image</label>
-            <div class="mt-2 flex items-center gap-4">
-                @if (imagePreviewUrl()) {
-                    <img [src]="imagePreviewUrl()" alt="Project image preview" class="h-20 w-32 object-cover rounded-md">
-                } @else {
-                    <div class="h-20 w-32 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <div class="mt-2 flex items-center gap-4" appImageUpload (fileDropped)="onImageDropped($event)">
+                <div class="relative group cursor-pointer h-20 w-32">
+                    @if (imagePreviewUrl()) {
+                        <img [src]="imagePreviewUrl()" alt="Project image preview" class="h-20 w-32 object-cover rounded-md border border-gray-300 dark:border-gray-600">
+                    } @else {
+                        <div class="h-20 w-32 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center border border-gray-300 dark:border-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                    }
+                    <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     </div>
-                }
-                <input type="file" (change)="onFileSelected($event)" accept="image/*" class="form-file-input">
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                </div>
+                 <div class="text-sm text-gray-500 dark:text-gray-400">
+                    <p>Drag and drop or paste an image here.</p>
+                </div>
             </div>
           </div>
           <div>
@@ -146,7 +155,7 @@ export class ProjectFormComponent {
             this.projectForm.reset();
             this.imagePreviewUrl.set(null);
         }
-    });
+    }, { allowSignalWrites: true });
   }
 
   onFileSelected(event: Event): void {
@@ -160,6 +169,16 @@ export class ProjectFormComponent {
       reader.readAsDataURL(this.selectedImageFile);
       this.projectForm.get('image_url')?.markAsDirty();
     }
+  }
+
+  onImageDropped(file: File): void {
+    this.selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.imagePreviewUrl.set(reader.result as string);
+    };
+    reader.readAsDataURL(this.selectedImageFile);
+    this.projectForm.get('image_url')?.markAsDirty();
   }
 
   async onSubmit(): Promise<void> {

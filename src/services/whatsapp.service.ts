@@ -1,6 +1,6 @@
 import { Injectable, signal, effect, inject } from '@angular/core';
 import { NotificationService } from './notification.service';
-import { SystemConfig } from '../shared/interfaces';
+import { SystemConfig, Task } from '../shared/interfaces';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
@@ -17,7 +17,9 @@ export class WhatsAppService {
     whatsapp_access_token: '',
     whatsapp_phone_number_id: '',
     whatsapp_graph_url: 'https://graph.facebook.com/v18.0',
-    whatsapp_status_template: '🔔 *Task Update* 🔔\n\nTask *{{taskTitle}}* has been moved to status: *{{newStatus}}*.'
+    whatsapp_status_template: 'task_status_update',
+    whatsapp_assignment_template: 'task_assigned_new',
+    whatsapp_reminder_template: 'task_reminder'
   });
 
   constructor() {
@@ -25,7 +27,7 @@ export class WhatsAppService {
         if (this.authService.isAdmin()) {
             this.loadGlobalConfig();
         }
-    });
+    }, { allowSignalWrites: true });
   }
 
   async loadGlobalConfig(): Promise<void> {
@@ -51,24 +53,132 @@ export class WhatsAppService {
     }
   }
 
-  async sendStatusUpdate(phoneNumber: string, taskTitle: string, newStatus: string): Promise<void> {
-    const config = this.globalConfig();
-    if (!config.whatsapp_integration_enabled) {
-      console.log('WhatsApp integration is disabled. Skipping notification.');
-      return;
-    }
+  private getTaskLink(taskId: string): string {
+      return `${window.location.origin}/tasks/${taskId}`;
+  }
 
-    const message = (config.whatsapp_status_template || 'Task {{taskTitle}} updated to {{newStatus}}')
-      .replace('{{taskTitle}}', taskTitle)
-      .replace('{{newStatus}}', newStatus);
+  async sendStatusUpdate(targetUserId: string, targetUserName: string, task: Task, projectName: string, remarks: string = ''): Promise<void> {
+    const config = this.globalConfig();
+    if (!config.whatsapp_integration_enabled) return;
 
     try {
-      await this.apiService.sendWhatsAppMessage(phoneNumber, message);
-      this.notificationService.showToast(`WhatsApp notification sent successfully.`, 'success');
+      // Template: task_status_update
+      // Params: 
+      // {{1}} = Hello {{1}} (User Name)
+      // {{2}} = Task Title
+      // {{3}} = Ticket ID
+      // {{4}} = Project
+      // {{5}} = Due Date
+      // {{6}} = Assigned To
+      // {{7}} = Current Status
+      // {{8}} = Remarks / Comments
+      // {{9}} = Task Link
+      
+      const params = [
+          targetUserName,
+          task.title,
+          task.ticket_id.toString().padStart(4, '0'),
+          projectName || 'N/A',
+          task.due_date,
+          task.assigned_to_username || 'Unassigned',
+          task.status,
+          remarks || 'Status updated',
+          this.getTaskLink(task.id)
+      ];
+
+      await this.apiService.sendWhatsAppTemplate(targetUserId, 'task_status_update', params);
     } catch (error: any) {
         console.error("Failed to send WhatsApp status update:", error);
-        const errorMessage = error?.error?.error || 'Failed to send WhatsApp notification.';
-        this.notificationService.showToast(errorMessage, 'error');
     }
+  }
+
+  async sendTaskAssignment(targetUserId: string, targetUserName: string, task: Task, projectName: string, assignerName: string): Promise<void> {
+    const config = this.globalConfig();
+    if (!config.whatsapp_integration_enabled) return;
+
+    try {
+      // Template: task_assigned_new
+      // Params:
+      // {{1}} = Hello {{1}} (User Name)
+      // {{2}} = Task Title
+      // {{3}} = Ticket ID
+      // {{4}} = Project
+      // {{5}} = Due Date
+      // {{6}} = Priority
+      // {{7}} = Description
+      // {{8}} = Task Link
+
+      const params = [
+          targetUserName,
+          task.title,
+          task.ticket_id.toString().padStart(4, '0'),
+          projectName || 'N/A',
+          task.due_date,
+          task.priority,
+          task.description || 'No description',
+          this.getTaskLink(task.id)
+      ];
+
+      await this.apiService.sendWhatsAppTemplate(targetUserId, 'task_assigned_new', params);
+    } catch (error: any) {
+        console.error("Failed to send WhatsApp assignment notification:", error);
+    }
+  }
+
+  async sendTaskReminder(targetUserId: string, targetUserName: string, task: Task, projectName: string, type: 'due_today' | 'upcoming'): Promise<void> {
+      const config = this.globalConfig();
+      if (!config.whatsapp_integration_enabled) return;
+
+      try {
+          let templateName = config.whatsapp_reminder_template || 'task_reminder';
+          let params: string[] = [];
+
+          if (type === 'due_today') {
+              // Template: task_reminder
+              // {{1}} = Hello {{1}}
+              // {{2}} = Task Title
+              // {{3}} = Ticket ID
+              // {{4}} = Project
+              // {{5}} = Due Date
+              // {{6}} = Priority
+              // {{7}} = Current Status
+              // {{8}} = Task Link
+              params = [
+                  targetUserName,
+                  task.title,
+                  task.ticket_id.toString().padStart(4, '0'),
+                  projectName || 'N/A',
+                  task.due_date,
+                  task.priority,
+                  task.status,
+                  this.getTaskLink(task.id)
+              ];
+          } else {
+              // Template: task_reminder_upcoming (Assuming name)
+              // {{1}} = Hello {{1}}
+              // {{2}} = Task Title
+              // {{3}} = Ticket ID
+              // {{4}} = Project
+              // {{5}} = Due Date
+              // {{6}} = Priority
+              // {{7}} = Status
+              // {{8}} = Task Link
+              templateName = config.whatsapp_reminder_template || 'task_reminder_upcoming'; // Or whatever user configured
+              params = [
+                  targetUserName,
+                  task.title,
+                  task.ticket_id.toString().padStart(4, '0'),
+                  projectName || 'N/A',
+                  task.due_date,
+                  task.priority,
+                  task.status,
+                  this.getTaskLink(task.id)
+              ];
+          }
+
+          await this.apiService.sendWhatsAppTemplate(targetUserId, templateName, params);
+      } catch (error: any) {
+          console.error(`Failed to send WhatsApp reminder (${type}):`, error);
+      }
   }
 }

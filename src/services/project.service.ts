@@ -28,7 +28,7 @@ export class ProjectService {
       } else {
         this._projects.set([]);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   async loadProjects(): Promise<void> {
@@ -49,7 +49,7 @@ export class ProjectService {
 
   async createProject(projectData: { name: string; description: string; image_url?: string | null }, member_ids: string[]): Promise<void> {
     try {
-      const newProject = await this.apiService.addProject(projectData, member_ids);
+      const newProject = await this.apiService.addProject({ ...projectData, image_url: projectData.image_url ?? null }, member_ids);
       this._projects.update(projects => [...projects, newProject]);
       this.notificationService.showToast('Project created successfully!', 'success');
       this.router.navigate(['/projects', newProject.id]);
@@ -62,7 +62,7 @@ export class ProjectService {
   async updateProject(id: string, projectData: { name: string; description: string; image_url?: string | null }, member_ids: string[]): Promise<void> {
     try {
       const oldProject = this._projects().find(p => p.id === id);
-      const updatedProject = await this.apiService.updateProject(id, projectData, member_ids);
+      const updatedProject = await this.apiService.updateProject(id, { ...projectData, image_url: projectData.image_url ?? null }, member_ids);
       this._projects.update(projects => projects.map(p => p.id === id ? updatedProject : p));
       this.notificationService.showToast('Project updated successfully!', 'success');
       

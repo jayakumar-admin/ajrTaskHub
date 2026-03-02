@@ -1,13 +1,50 @@
 const db = require('../config/db');
 
-const getAllTasks = async () => {
-    const { rows } = await db.query(
-        `SELECT t.*, COALESCE(array_agg(tl.user_id) FILTER (WHERE tl.user_id IS NOT NULL), '{}') as liked_by_users
-         FROM tasks t
-         LEFT JOIN task_likes tl ON t.id = tl.task_id
-         GROUP BY t.id
-         ORDER BY t.created_at DESC`
-    );
+const getAllTasks = async (filters = {}) => {
+    let query = `
+        SELECT t.*, COALESCE(array_agg(tl.user_id) FILTER (WHERE tl.user_id IS NOT NULL), '{}') as liked_by_users
+        FROM tasks t
+        LEFT JOIN task_likes tl ON t.id = tl.task_id
+    `;
+    
+    const params = [];
+    const conditions = [];
+
+    if (filters.status) {
+        params.push(filters.status);
+        conditions.push(`t.status = $${params.length}`);
+    }
+    if (filters.priority) {
+        params.push(filters.priority);
+        conditions.push(`t.priority = $${params.length}`);
+    }
+    if (filters.assign_to) {
+        params.push(filters.assign_to);
+        conditions.push(`t.assign_to = $${params.length}`);
+    }
+    if (filters.project_id) {
+        params.push(filters.project_id);
+        conditions.push(`t.project_id = $${params.length}`);
+    }
+    if (filters.due_date_start) {
+        params.push(filters.due_date_start);
+        conditions.push(`t.due_date >= $${params.length}`);
+    }
+    if (filters.due_date_end) {
+        params.push(filters.due_date_end);
+        conditions.push(`t.due_date <= $${params.length}`);
+    }
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += `
+        GROUP BY t.id
+        ORDER BY t.created_at DESC
+    `;
+
+    const { rows } = await db.query(query, params);
     return rows;
 };
 

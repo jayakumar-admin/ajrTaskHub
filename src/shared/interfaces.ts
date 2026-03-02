@@ -4,6 +4,7 @@ export interface User {
   id: string; 
   auth_id?: string; // This might not be exposed from the new backend
   username: string;
+  email?: string;
   role: 'Admin' | 'User' | 'Manager' | 'Viewer';
   created_at?: string;
   avatar_url?: string; // Changed from base64
@@ -98,7 +99,7 @@ export interface Project {
   created_by: string;
   created_by_username?: string;
   member_ids: string[];
-  image_url?: string;
+  image_url?: string | null;
 }
 
 export interface Notification {
@@ -151,6 +152,7 @@ export interface SystemConfig {
   whatsapp_graph_url?: string;
   whatsapp_status_template?: string;
   whatsapp_assignment_template?: string;
+  whatsapp_reminder_template?: string;
 }
 
 export interface ChatMessageReaction {
@@ -198,6 +200,7 @@ export interface RolePermissions {
   can_add_attachments: boolean;
   can_preview_attachments: boolean;
   can_download_attachments: boolean;
+  can_use_ai_assistant: boolean;
 }
 
 export interface CronJob {
@@ -218,4 +221,12 @@ export interface WhatsAppLog {
   error_message?: string;
   meta_message_id?: string;
   sent_at: string;
+}
+
+export interface PersonalTodo {
+  id: string;
+  user_id: string;
+  text: string;
+  is_completed: boolean;
+  created_at: string;
 }

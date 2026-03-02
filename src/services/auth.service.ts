@@ -46,7 +46,7 @@ export class AuthService {
       } else {
         this.userSettings.set(null);
       }
-    });
+    }, { allowSignalWrites: true });
   }
   
   private async loadUserFromToken(): Promise<void> {
@@ -166,6 +166,18 @@ export class AuthService {
     this.notificationService.showToast('Password reset functionality needs to be implemented on the backend.', 'info', 5000);
     // In a real app: await this.apiService.forgotPassword(email);
     return true;
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<boolean> {
+    try {
+      await this.apiService.changePassword({ currentPassword, newPassword });
+      this.notificationService.showToast('Password changed successfully.', 'success');
+      return true;
+    } catch (error: any) {
+      const errorMessage = error?.error?.error || 'Failed to change password.';
+      this.notificationService.showToast(errorMessage, 'error');
+      return false;
+    }
   }
 
   logout(): void {

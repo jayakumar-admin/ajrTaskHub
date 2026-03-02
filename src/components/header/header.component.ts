@@ -11,23 +11,50 @@ import { SearchService } from '../../services/search.service';
 import { Notification } from '../../shared/interfaces';
 import { ChatService } from '../../services/chat.service';
 import { PermissionService } from '../../services/permission.service';
+import { PersonalTodoComponent } from '../personal-todo/personal-todo.component';
+import { LayoutService } from '../../services/layout.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, FormsModule],
+  imports: [CommonModule, RouterLink, DatePipe, FormsModule, PersonalTodoComponent],
   template: `
 <header class="sticky top-0 z-30 bg-white dark:bg-gray-800 shadow-md py-4 border-b border-gray-200 dark:border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-wrap justify-between items-center gap-4">
             <!-- Title -->
             <div class="flex items-center gap-2">
-                <svg class="h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                <!-- Mobile Menu Toggle -->
+                <button (click)="toggleSidebar()" class="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500">
+                    <span class="sr-only">Open sidebar</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                
+                <svg class="h-8 w-8 text-primary-600 hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                 <h1 class="text-1xl font-extrabold text-gray-900 dark:text-white tracking-tight">AJRTaskHub</h1>
             </div>
             
             <!-- Right side controls -->
             <div class="flex items-center space-x-2 md:space-x-4">
+                <!-- Personal To-Do -->
+                <div class="relative">
+                    <button (click)="toggleTodoPanel()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="My To-Do List">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                    </button>
+                    
+                    @if (showTodoPanel()) {
+                        <div class="fixed inset-x-4 top-20 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 origin-top md:origin-top-right">
+                            <app-personal-todo></app-personal-todo>
+                        </div>
+                        <!-- Backdrop -->
+                        <div class="fixed inset-0 z-40" (click)="showTodoPanel.set(false)"></div>
+                    }
+                </div>
+
                 <!-- Dark Mode Toggle -->
                 <button (click)="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                     @if (isDarkMode()) {
@@ -169,6 +196,7 @@ export class HeaderComponent {
   searchService = inject(SearchService);
   chatService = inject(ChatService);
   permissionService = inject(PermissionService);
+  layoutService = inject(LayoutService);
   router = inject(Router);
 
   currentUser = this.authService.currentUser;
@@ -179,6 +207,7 @@ export class HeaderComponent {
   searchTerm = this.searchService.searchTerm;
 
   showNotificationsPanel = signal(false);
+  showTodoPanel = signal(false);
   notifications = this.notificationService.notifications;
   unreadCount = this.notificationService.unreadCount;
   totalUnreadCount = this.chatService.totalUnreadCount;
@@ -211,6 +240,14 @@ export class HeaderComponent {
 
   toggleNotificationsPanel(): void {
     this.showNotificationsPanel.update(val => !val);
+  }
+
+  toggleTodoPanel(): void {
+    this.showTodoPanel.update(val => !val);
+  }
+
+  toggleSidebar(): void {
+    this.layoutService.toggleSidebar();
   }
 
   markNotificationAsRead(id: string): void {

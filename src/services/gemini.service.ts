@@ -3,6 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Task, TaskReportSummary, User, TaskPriority, TaskStatus, TaskType } from '../shared/interfaces';
 import { NotificationService } from './notification.service';
 import { UserService } from './user.service';
+import { environment } from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,18 +12,22 @@ export class GeminiService {
   private notificationService = inject(NotificationService);
   private userService = inject(UserService);
   private ai: GoogleGenAI;
-
+  GEMINI_API_KEY='AIzaSyBiwXDl3jzVVDun1iHhzWoM3-n8HSMjMjA';
   constructor() {
-    // FIX: Initialize GoogleGenAI according to guidelines
-    // The API key MUST be provided as an environment variable `process.env.API_KEY`
-    if (!process.env.API_KEY) {
-      console.error("CRITICAL: Gemini API Key is missing from environment variables (process.env.API_KEY)");
-      this.notificationService.showToast("Gemini API Key is not configured.", "error", 10000);
-      // Fallback to a dummy implementation to avoid crashing the app
-      this.ai = { models: {} } as GoogleGenAI; 
-      return;
+    // FIX: Initialize GoogleGenAI with the global GEMINI_API_KEY
+    // The API key is injected by the platform.
+    try {
+      if (!this.GEMINI_API_KEY) {
+        console.error("CRITICAL: GEMINI_API_KEY is missing.");
+        this.notificationService.showToast("Gemini API Key is not configured.", "error", 10000);
+        this.ai = { models: {} } as GoogleGenAI; 
+        return;
+      }
+      this.ai = new GoogleGenAI({ apiKey: this.GEMINI_API_KEY });
+    } catch (e) {
+      console.error("Error initializing Gemini API:", e);
+      this.ai = { models: {} } as GoogleGenAI;
     }
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
   /**
@@ -66,7 +71,7 @@ export class GeminiService {
       });
 
       const jsonString = response.text;
-      return JSON.parse(jsonString) as Partial<Omit<Task, 'id' | 'created_at'>>;
+      return JSON.parse(jsonString ?? '') as Partial<Omit<Task, 'id' | 'created_at'>>;
     } catch (error) {
       console.error('Error parsing text to task with Gemini:', error);
       this.notificationService.showToast('AI task parsing failed.', 'error');
@@ -128,7 +133,7 @@ export class GeminiService {
       });
       
       const jsonString = response.text;
-      return JSON.parse(jsonString) as TaskReportSummary;
+      return JSON.parse(jsonString ?? '') as TaskReportSummary;
     } catch (error) {
       console.error('Error generating task report with Gemini:', error);
       this.notificationService.showToast('AI report generation failed.', 'error');
@@ -151,7 +156,7 @@ export class GeminiService {
           model: 'gemini-2.5-flash',
           contents: prompt
       });
-      return response.text;
+      return response.text!;
     } catch (error) {
       console.error(`Error generating resume ${section}:`, error);
       this.notificationService.showToast(`AI failed to generate resume ${section}.`, 'error');
@@ -209,7 +214,7 @@ export class GeminiService {
       });
       
       const jsonString = response.text;
-      return JSON.parse(jsonString);
+      return JSON.parse(jsonString ?? '');
     } catch (error) {
       console.error('Error generating full resume with Gemini:', error);
       this.notificationService.showToast('AI resume generation failed.', 'error');

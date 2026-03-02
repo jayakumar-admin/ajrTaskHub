@@ -22,6 +22,7 @@ import Cropper from "cropperjs";
 import { GeminiService } from "../../services/gemini.service";
 import { NotificationService } from "../../services/notification.service";
 import html2pdf from "html2pdf.js";
+import { ImageUploadDirective } from "../../directives/image-upload.directive";
 
 // declare var html2pdf: any;
 
@@ -30,7 +31,7 @@ type ResumeTemplate = "classic" | "modern" | "creative" | "minimalist";
 @Component({
   selector: "app-ajr-tools",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ImageUploadDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="container mx-auto p-4 my-8 animate-fade-in">
@@ -458,11 +459,18 @@ type ResumeTemplate = "classic" | "modern" | "creative" | "minimalist";
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
             Upload an image to crop, resize, and rotate.
           </p>
-          <input
-            type="file"
-            (change)="onCropperFileSelected($event)"
-            accept="image/*"
-            class="form-file-input mb-4" />
+          <div class="mb-4" appImageUpload (fileDropped)="onCropperFileDropped($event)">
+              <label for="cropper-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors">
+                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                      </svg>
+                      <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span>, drag and drop, or paste</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF</p>
+                  </div>
+                  <input id="cropper-upload" type="file" class="hidden" (change)="onCropperFileSelected($event)" accept="image/*" />
+              </label>
+          </div>
 
           @if (cropperImageUrl()) {
           <div class="my-4 bg-gray-100 dark:bg-gray-900 p-2 rounded-lg">
@@ -583,11 +591,18 @@ type ResumeTemplate = "classic" | "modern" | "creative" | "minimalist";
             Upload an image to compress it. Adjust the quality slider to see the
             result in real-time.
           </p>
-          <input
-            type="file"
-            (change)="onCompressorFileSelected($event)"
-            accept="image/jpeg, image/png, image/webp"
-            class="form-file-input mb-4" />
+          <div class="mb-4" appImageUpload (fileDropped)="onCompressorFileDropped($event)">
+              <label for="compressor-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors">
+                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                      </svg>
+                      <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span>, drag and drop, or paste</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">JPG, PNG, WebP</p>
+                  </div>
+                  <input id="compressor-upload" type="file" class="hidden" (change)="onCompressorFileSelected($event)" accept="image/jpeg, image/png, image/webp" />
+              </label>
+          </div>
 
           @if (compressorOriginalUrl()) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -853,7 +868,7 @@ export class AjrToolsComponent implements OnDestroy {
       } else {
         this.destroyCropper();
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   ngOnDestroy() {
@@ -1105,6 +1120,15 @@ export class AjrToolsComponent implements OnDestroy {
     }
   }
 
+  onCropperFileDropped(file: File) {
+    if (file.type.startsWith('image/')) {
+      this.selectedCropperFile = file;
+      const reader = new FileReader();
+      reader.onload = (e: any) => this.cropperImageUrl.set(e.target.result as string);
+      reader.readAsDataURL(file);
+    }
+  }
+
   cropperZoom(ratio: number) {
     this.cropper?.zoom(ratio);
   }
@@ -1147,6 +1171,20 @@ export class AjrToolsComponent implements OnDestroy {
         this.compressImage(reader.result as string, this.quality());
       };
       reader.readAsDataURL(this.selectedCompressorFile);
+    }
+  }
+
+  onCompressorFileDropped(file: File) {
+    if (file.type.startsWith('image/')) {
+      this.selectedCompressorFile = file;
+      this.originalSize.set(file.size);
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const result = e.target.result as string;
+        this.compressorOriginalUrl.set(result);
+        this.compressImage(result, this.quality());
+      };
+      reader.readAsDataURL(file);
     }
   }
 

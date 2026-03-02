@@ -91,6 +91,12 @@ import { ProjectService } from '../../services/project.service';
         Complete
       </button>
     }
+    @if (canDelete()) {
+      <button (click)="deleteTask($event)"
+              class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 ml-2">
+        Delete
+      </button>
+    }
   </div>
 </div>
 `,
@@ -106,6 +112,11 @@ export class TaskCardComponent {
   canChangeStatus = computed(() => {
     const currentTask = this.task();
     return currentTask ? this.taskService.canChangeStatus(currentTask) : false;
+  });
+
+  canDelete = computed(() => {
+    const currentTask = this.task();
+    return currentTask ? this.taskService.canDeleteTask(currentTask) : false;
   });
 
   hasLiked = computed(() => {
@@ -175,6 +186,17 @@ export class TaskCardComponent {
       this.taskService.updateTaskStatus(this.task().id, 'completed');
     } else {
       this.notificationService.showToast('You do not have permission to complete this task.', 'error');
+    }
+  }
+
+  async deleteTask(event: Event): Promise<void> {
+    this.stopPropagation(event);
+    if (this.canDelete()) {
+      if (confirm('Are you sure you want to delete this task?')) {
+        this.taskService.deleteTask(this.task().id);
+      }
+    } else {
+      this.notificationService.showToast('You do not have permission to delete this task.', 'error');
     }
   }
 

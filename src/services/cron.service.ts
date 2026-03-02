@@ -22,7 +22,7 @@ export class CronService {
       } else {
         this.cronJobs.set([]);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   async loadCronJobs(): Promise<void> {

@@ -118,7 +118,8 @@ CREATE TABLE system_config (
     whatsapp_phone_number_id TEXT,
     whatsapp_graph_url TEXT,
     whatsapp_status_template TEXT,
-    whatsapp_assignment_template TEXT
+    whatsapp_assignment_template TEXT,
+    whatsapp_reminder_template TEXT
 );
 
 -- Chat Messages Table
@@ -157,15 +158,16 @@ CREATE TABLE role_permissions (
     can_add_comments BOOLEAN,
     can_add_attachments BOOLEAN,
     can_preview_attachments BOOLEAN,
-    can_download_attachments BOOLEAN
+    can_download_attachments BOOLEAN,
+    can_use_ai_assistant BOOLEAN DEFAULT TRUE
 );
 
 -- Default data for roles
-INSERT INTO role_permissions (role, can_create_tasks, can_create_projects, can_use_chat, can_change_status, can_access_tools, can_access_calendar, can_access_kanban, can_assign_tasks, can_add_comments, can_add_attachments, can_preview_attachments, can_download_attachments) VALUES
-('Admin', true, true, true, true, true, true, true, true, true, true, true, true),
-('Manager', true, true, true, true, true, true, true, true, true, true, true, true),
-('User', true, false, true, true, true, true, true, false, true, true, true, true),
-('Viewer', false, false, false, false, false, true, true, false, false, false, true, true);
+INSERT INTO role_permissions (role, can_create_tasks, can_create_projects, can_use_chat, can_change_status, can_access_tools, can_access_calendar, can_access_kanban, can_assign_tasks, can_add_comments, can_add_attachments, can_preview_attachments, can_download_attachments, can_use_ai_assistant) VALUES
+('Admin', true, true, true, true, true, true, true, true, true, true, true, true, true),
+('Manager', true, true, true, true, true, true, true, true, true, true, true, true, true),
+('User', true, false, true, true, true, true, true, false, true, true, true, true, true),
+('Viewer', false, false, false, false, false, true, true, false, false, false, true, true, false);
 
 -- Cron Jobs Table
 CREATE TABLE cron_jobs (
@@ -195,4 +197,13 @@ CREATE TABLE whatsapp_logs (
     error_message TEXT,
     meta_message_id VARCHAR(255),
     sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Personal Todos Table
+CREATE TABLE personal_todos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

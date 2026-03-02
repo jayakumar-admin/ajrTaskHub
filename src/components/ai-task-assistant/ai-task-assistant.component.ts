@@ -26,7 +26,7 @@ import { ThemeService } from "../../services/theme.service"; // Import ThemeServ
 
 // Declare webkitSpeechRecognition globally for TypeScript to recognize it.
 // This is a browser-specific API and not part of standard TypeScript DOM types.
-declare var webkitSpeechRecognition: any;
+declare let webkitSpeechRecognition: any;
 
 @Component({
   selector: "app-ai-task-assistant",
@@ -421,7 +421,8 @@ export class AiTaskAssistantComponent {
           this.userInput.set("");
           this.stopSpeechRecognition();
         }
-      }
+      },
+      { allowSignalWrites: true }
     );
 
     effect(() => {
@@ -454,7 +455,7 @@ export class AiTaskAssistantComponent {
   }
 
   public toggle() {
-    this.isOpen() ? this.close() : this.open();
+    if (this.isOpen()) { this.close(); } else { this.open(); }
   }
 
   private clearDebounceTimers() {

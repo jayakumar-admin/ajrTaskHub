@@ -18,8 +18,19 @@ const findUserById = async (userId) => {
     return rows[0];
 };
 
+const findUserByIdWithPassword = async (userId) => {
+    const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+    return rows[0];
+};
+
+const updatePassword = async (userId, passwordHash) => {
+    await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+};
+
 module.exports = {
     createUser,
     findUserByEmail,
     findUserById,
+    findUserByIdWithPassword,
+    updatePassword,
 };

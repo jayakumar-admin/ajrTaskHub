@@ -25,7 +25,7 @@ export class UserService {
         this.users.set([]);
         this.loading.set(false);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   private async loadUsers(): Promise<void> {

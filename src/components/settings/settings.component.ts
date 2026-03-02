@@ -8,11 +8,12 @@ import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 import { ThemeService, Theme } from '../../services/theme.service';
 import { UserSettings } from '../../shared/interfaces';
+import { ImageUploadDirective } from '../../directives/image-upload.directive';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ImageUploadDirective],
   template: `
 <div class="container mx-auto p-4 my-8 animate-fade-in">
   <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Settings</h2>
@@ -25,6 +26,7 @@ import { UserSettings } from '../../shared/interfaces';
           <li><a href="#profile" (click)="scrollTo('profile', $event)" class="settings-nav-link">Profile</a></li>
           <li><a href="#notifications" (click)="scrollTo('notifications', $event)" class="settings-nav-link">Notifications</a></li>
           <li><a href="#appearance" (click)="scrollTo('appearance', $event)" class="settings-nav-link">Appearance</a></li>
+          <li><a href="#security" (click)="scrollTo('security', $event)" class="settings-nav-link">Security</a></li>
           <li><a href="#account" (click)="scrollTo('account', $event)" class="settings-nav-link">Account</a></li>
         </ul>
       </div>
@@ -36,10 +38,10 @@ import { UserSettings } from '../../shared/interfaces';
       <section id="profile" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 scroll-mt-20">
         <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">Profile</h3>
         <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <div class="relative">
-                <img [src]="avatarUrl()" alt="User Avatar" class="w-24 h-24 rounded-full object-cover ring-4 ring-primary-300 dark:ring-primary-700">
-                <label for="avatar-upload" class="absolute bottom-0 right-0 p-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-full cursor-pointer transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            <div class="relative group" appImageUpload (fileDropped)="onAvatarDropped($event)">
+                <img [src]="avatarUrl()" alt="User Avatar" class="w-24 h-24 rounded-full object-cover ring-4 ring-primary-300 dark:ring-primary-700 group-hover:opacity-75 transition-opacity">
+                <label for="avatar-upload" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </label>
                 <input id="avatar-upload" type="file" class="hidden" (change)="onAvatarSelected($event)" accept="image/*">
             </div>
@@ -127,6 +129,34 @@ import { UserSettings } from '../../shared/interfaces';
               <span class="slider round"></span>
             </label>
           </div>
+        </div>
+      </section>
+
+      <!-- Security Section -->
+      <section id="security" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 scroll-mt-20">
+        <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">Security</h3>
+        <div class="space-y-4">
+          <div>
+            <label for="current_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+            <input type="password" id="current_password" [(ngModel)]="currentPassword" class="form-input">
+          </div>
+          <div>
+            <label for="new_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+            <input type="password" id="new_password" [(ngModel)]="newPassword" class="form-input">
+          </div>
+          <div>
+            <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm New Password</label>
+            <input type="password" id="confirm_password" [(ngModel)]="confirmPassword" class="form-input">
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end">
+          <button (click)="changePassword()" class="form-submit-button" [disabled]="isChangingPassword()">
+            @if(isChangingPassword()) {
+              <span class="animate-spin mr-2">⏳</span> Changing...
+            } @else {
+              Change Password
+            }
+          </button>
         </div>
       </section>
 
@@ -233,6 +263,12 @@ export class SettingsComponent {
   whatsappNumber = signal('');
   selectedAvatarFile: File | null = null;
   isUploadingAvatar = signal(false);
+  
+  // Password change state
+  currentPassword = signal('');
+  newPassword = signal('');
+  confirmPassword = signal('');
+  isChangingPassword = signal(false);
 
   avatarUrl = signal('https://picsum.photos/seed/default/100');
 
@@ -250,7 +286,7 @@ export class SettingsComponent {
         this.whatsappNotifications.set(settings.whatsapp_notifications_enabled ?? false);
         this.whatsappNumber.set(settings.whatsapp_number ?? '');
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   scrollTo(id: string, event: MouseEvent): void {
@@ -264,6 +300,11 @@ export class SettingsComponent {
       this.selectedAvatarFile = input.files[0];
       this.uploadAvatar();
     }
+  }
+
+  onAvatarDropped(file: File): void {
+    this.selectedAvatarFile = file;
+    this.uploadAvatar();
   }
 
   async uploadAvatar(): Promise<void> {
@@ -307,6 +348,29 @@ export class SettingsComponent {
       whatsapp_number: this.whatsappNumber(),
     };
     await this.authService.updateSettings(settings);
+  }
+
+  async changePassword(): Promise<void> {
+    if (this.newPassword() !== this.confirmPassword()) {
+      this.notificationService.showToast('New passwords do not match.', 'error');
+      return;
+    }
+    if (this.newPassword().length < 6) {
+      this.notificationService.showToast('Password must be at least 6 characters long.', 'error');
+      return;
+    }
+
+    this.isChangingPassword.set(true);
+    try {
+      const success = await this.authService.changePassword(this.currentPassword(), this.newPassword());
+      if (success) {
+        this.currentPassword.set('');
+        this.newPassword.set('');
+        this.confirmPassword.set('');
+      }
+    } finally {
+      this.isChangingPassword.set(false);
+    }
   }
 
   setTheme(theme: Theme): void {

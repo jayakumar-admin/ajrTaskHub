@@ -23,6 +23,7 @@ const notificationRoutes = require('./routes/notifications');
 const chatRoutes = require('./routes/chat');
 const whatsappRoutes = require('./routes/whatsapp');
 const commentRoutes = require('./routes/comments');
+const todoRoutes = require('./routes/todos');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
@@ -34,6 +35,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/todos', todoRoutes);
 
 // Serve static files from the Angular build
 const angularAppPath = path.join(__dirname, '..', 'dist');
